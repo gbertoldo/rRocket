@@ -1,9 +1,12 @@
-/**************************************************************************\
-  /            rRocket: An Arduino powered rocketry recovery system            \
+
+
+    /**************************************************************************\
+   /            rRocket: An Arduino powered rocketry recovery system            \
   /              Federal University of Technology - Parana - Brazil              \
   \                by Guilherme Bertoldo and Jonas Joacir Radtke                 /
-  \                         updated October 08, 2019                           /
-  \**************************************************************************/
+   \                         updated October 12, 2019                           /
+    \**************************************************************************/
+
 
 #ifndef BUTTON_H
 #define BUTTON_H

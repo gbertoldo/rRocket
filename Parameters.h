@@ -1,9 +1,13 @@
-/**************************************************************************\
-  /            rRocket: An Arduino powered rocketry recovery system            \
+
+
+    /**************************************************************************\
+   /            rRocket: An Arduino powered rocketry recovery system            \
   /              Federal University of Technology - Parana - Brazil              \
   \                by Guilherme Bertoldo and Jonas Joacir Radtke                 /
-  \                         updated September 13, 2019                         /
-  \**************************************************************************/
+   \                         updated October 12, 2019                           /
+    \**************************************************************************/
+
+
 #ifndef PARAMETERS_H
 #define PARAMETERS_H
 
@@ -18,7 +22,7 @@ extern const int                           pinParachute; // Pin to trigger the m
 extern const float      displacementForLiftoffDetection; // Displacement from ground for liftoff detection
 extern const float displacementForDrogueChuteDeployment; // Displacement from apogee for activation of drogue chute
 extern const float          parachuteDeploymentAltitude; // Altitude to deploy main parachute
-extern const float      displacementForRecoverDetection; // Displacement for recover detection
+extern const float     displacementForRecoveryDetection; // Displacement for recovery detection
 
 }
 

@@ -1,15 +1,19 @@
-#include "Arduino.h"
 #include "Barometer.h"
-#include "Adafruit_BMP280.h"
 
 bool Barometer::begin()
 {
 
   Wire.begin();
 
-  if ( searchBarometerAddress ) barometerAddress = getBarometerAddress();
+  if ( searchBarometerAddress ) {
 
-  while (!barometer.begin(barometerAddress)) {}
+    // Searching for barometer address
+    if ( ! getBarometerAddress(barometerAddress) ) return false;
+    
+  }
+
+  // Initializing BMP
+  if (!barometer.begin(barometerAddress)) return false;
 
   baseline = barometer.readAltitude(1013.25);
 
@@ -36,10 +40,9 @@ float Barometer::getApogee()
 }
 
 
-byte Barometer::getBarometerAddress()
+bool Barometer::getBarometerAddress(byte& address)
 {
 
-  byte address;
   byte err;
   int  counter {0};
 
@@ -60,10 +63,9 @@ byte Barometer::getBarometerAddress()
 
   if ( counter != 1 )
   {
-    Serial.println(" BMP I2C address not identified. Fatal error! Stopping... \n");
-    while (true);
+    return false;
   }
 
-  return address;
+  return true;
 
 };

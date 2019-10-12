@@ -20,13 +20,13 @@ bool Actuator::begin()
 void Actuator::deployParachute()
 {
 
-  digitalWrite(Parameters::pinDrogueChute, HIGH);
+  digitalWrite(Parameters::pinParachute, HIGH);
 
 }
 
 void Actuator::deployDrogueChute()
 {
 
-  digitalWrite(Parameters::pinParachute, HIGH);
+  digitalWrite(Parameters::pinDrogueChute, HIGH);
 
 }

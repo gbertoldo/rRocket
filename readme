@@ -1,13 +1,17 @@
-Guilherme
-   Arquivos em manutenção
-      - Actuator.*
-   Arquivos modificados (concluídos)
-      - Button.*
-      - Barometer.*
-      - Memory.*
-      - TimerCountDown.*
-      - Timer.*
+Analyzed
+========
+rRocket.ino
+Actuator  
+Adafruit_BMP280  
+Barometer  
+Button  
+HumanInterface 
+Memory  
+Parameters  
+RecoverySystem
 
-TODO
-Check memory initialization
-Check barometer initialization
+Not used
+==============
+TimerCountdown  
+Timer
+

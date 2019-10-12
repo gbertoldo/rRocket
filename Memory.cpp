@@ -9,7 +9,6 @@ bool Memory::begin()
   restartPosition(); // initial position to read or write the height
   apogee = 0; // initial value to apogee
   memorySize = EEPROM.length(); // EEPROM size of the Arduino (bytes)
-  //memorySize = 124;
 
   if (readApogee() > 0)
   {

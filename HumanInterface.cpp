@@ -10,7 +10,7 @@ void HumanInterface::begin()
 }
 
 
-void HumanInterface::showInitialization()
+void HumanInterface::showInitMessage()
 {
   // Clear Serial Monitor
   for (int j = 0; j < 100; ++j) Serial.print("\n");
@@ -43,30 +43,30 @@ void HumanInterface::blinkReadyToLaunch()
 void HumanInterface::blinkApogee(Memory& memory)
 {
 
-  int thousands;
-  int hundreds;
-  int dozens;
-  int units;
-  unsigned int iHeight;
-  float fHeight;
+  int          thousands;
+  int           hundreds;
+  int             dozens;
+  int              units;
+  unsigned int   iHeight;
+  float          fHeight;
 
   fHeight = memory.readApogee();
 
-  iHeight = (int)fHeight;
+  iHeight   = (int)fHeight;
   thousands = iHeight / 1000;
-  hundreds = iHeight % 1000;
-  hundreds = hundreds / 100;
-  dozens = iHeight % 100;
-  dozens = dozens / 10;
-  units = iHeight % 10;
+  hundreds  = iHeight % 1000;
+  hundreds  = hundreds / 100;
+  dozens    = iHeight % 100;
+  dozens    = dozens / 10;
+  units     = iHeight % 10;
 
-  if (fHeight >= 1000) blinkAltitude(thousands);
+  if (fHeight >= 1000) blinkNumber(thousands);
 
-  if (fHeight >= 100) blinkAltitude(hundreds);
+  if (fHeight >= 100)  blinkNumber(hundreds);
 
-  blinkAltitude(dozens);
+  if (fHeight >= 10)   blinkNumber(dozens);
 
-  blinkAltitude(units);
+  blinkNumber(units);
 
 }
 
@@ -74,6 +74,7 @@ void HumanInterface::blinkApogee(Memory& memory)
 void HumanInterface::showApogee(Memory& memory)
 {
   Serial.println("");
+  Serial.println("Reading apogee. Please wait...");
   Serial.print("Apogee (m) = ");
   Serial.println(memory.readApogee());
   Serial.println("");
@@ -104,7 +105,7 @@ void HumanInterface::showTrajectory(unsigned long int iTimeStep, Memory& memory)
 }
 
 
-bool HumanInterface::blinkAltitude(int n)
+bool HumanInterface::blinkNumber(int n)
 {
 
   int i;

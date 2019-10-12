@@ -1,15 +1,3 @@
-
-
-
-/**************************************************************************\
-  /            rRocket: An Arduino powered rocketry recovery system            \
-  /              Federal University of Technology - Parana - Brazil              \
-  \                by Guilherme Bertoldo and Jonas Joacir Radtke                 /
-  \                         updated September 13, 2019                         /
-  \**************************************************************************/
-
-
-
 #include "RecoverySystem.h"
 #include "Parameters.h"
 
@@ -21,7 +9,7 @@ bool RecoverySystem::begin()
   humanInterface.begin();
 
   // Show initialization message
-  humanInterface.showInitialization();
+  humanInterface.showInitMessage();
 
   // Initializing altitude vector
   for (int i = 0; i < n; i++)
@@ -126,9 +114,11 @@ void RecoverySystem::readyToLaunchRun()
     // Changing recovery system's state
     state = RecoverySystemState::flying;
   }
-
-  // Blink recovery system is ready to launch
-  humanInterface.blinkReadyToLaunch();
+  else
+  {
+    // Blink recovery system is ready to launch
+    humanInterface.blinkReadyToLaunch();
+  }
 }
 
 
@@ -159,6 +149,9 @@ void RecoverySystem::drogueChuteActiveRun()
   // Registers altitude and writes to memory
   registerAltitude(true);
 
+  // Deploying drogue chute
+  actuator.deployDrogueChute();
+
   // Checks for main parachute activation
   bool parachuteActivation = false;
 
@@ -181,10 +174,13 @@ void RecoverySystem::parachuteActiveRun()
   // Registers altitude and writes to memory
   registerAltitude(true);
 
+  // Deploying parachute
+  actuator.deployParachute();
+
   // Checks for recovery
   bool isRecovered = false;
 
-  if ( abs( altitude[n - 1] - altitude[0] ) < Parameters::displacementForRecoverDetection ) isRecovered = true;
+  if ( abs( altitude[n - 1] - altitude[0] ) < Parameters::displacementForRecoveryDetection ) isRecovered = true;
 
   // If rocket is recovered, changes recovery system's state
   if ( isRecovered )

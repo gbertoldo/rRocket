@@ -1,9 +1,13 @@
-/**************************************************************************\
-  /            rRocket: An Arduino powered rocketry recovery system            \
+
+
+    /**************************************************************************\
+   /            rRocket: An Arduino powered rocketry recovery system            \
   /              Federal University of Technology - Parana - Brazil              \
   \                by Guilherme Bertoldo and Jonas Joacir Radtke                 /
-  \                         updated October 08, 2019                           /
-  \**************************************************************************/
+   \                         updated October 12, 2019                           /
+    \**************************************************************************/
+
+
 #ifndef BAROMETER_H
 #define BAROMETER_H
 
@@ -20,7 +24,7 @@ class Barometer
 {
 
   public:
-    // Initializes
+    // Initializes barometer. Returns true if successful initialization.
     bool begin();
 
     // Get current altitude
@@ -32,16 +36,16 @@ class Barometer
   private:
 
     // Search for barometer address
-    byte getBarometerAddress();
+    bool getBarometerAddress(byte& address);
 
 
   private:
 
     Adafruit_BMP280   barometer;                       // BMP280 sensor manager
-    float             baseline {0};                    // Height at launch ramp
+    float             baseline {0};                    // Altitude at launch ramp
     byte              barometerAddress;                // BMP I2C address
     bool              searchBarometerAddress {true};   // If BMP address is known, fill it in the previous line and mark this variable as false
-    float             apogee{ -500};                   // Apogee
+    float             apogee{ -500};                   // Apogee (m)
 
 };
 

@@ -1,12 +1,22 @@
+
+
+    /**************************************************************************\
+   /            rRocket: An Arduino powered rocketry recovery system            \
+  /              Federal University of Technology - Parana - Brazil              \
+  \                by Guilherme Bertoldo and Jonas Joacir Radtke                 /
+   \                         updated October 12, 2019                           /
+    \**************************************************************************/
+
+
 #ifndef MEMORY_H
 #define MEMORY_H
 
 // Memory states
-enum class MemoryState {empty, full, writing};
+enum class MemoryState {empty, full};
 
 /*
 
-   Read from and write into EEPROM memory
+   Read from and write to EEPROM memory
 
 */
 
@@ -24,16 +34,16 @@ class Memory
     // Returns the memory state
     MemoryState getState();
 
-    // Read EEPROM memory
+    // Read altitude from EEPROM memory
     float readAltitude();
 
-    // Write into EEPROM memory
+    // Write altitude to EEPROM memory
     bool writeAltitude(float);
 
-    // Get apogee
+    // Get apogee from EEPROM memory
     float readApogee();
 
-    // Write into EEPROM memory
+    // Write apogee to EEPROM memory
     bool writeApogee();
 
     // Erase memory
@@ -57,7 +67,7 @@ class Memory
     MemoryState state;
 
     // EEPROM total size (bytes)
-    int memorySize;
+    unsigned int memorySize;
 
 };
 
