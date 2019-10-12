@@ -51,6 +51,9 @@ class Memory
 
     // Restart position
     bool restartPosition();
+    
+    // Is there a next value?
+    bool hasNext();
 
   private:
 

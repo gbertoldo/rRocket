@@ -84,7 +84,7 @@ void HumanInterface::showApogee(Memory& memory)
 void HumanInterface::showTrajectory(unsigned long int iTimeStep, Memory& memory)
 {
 
-  int i;
+  
   float fTimeStep;
 
   fTimeStep = (float)iTimeStep;
@@ -94,11 +94,13 @@ void HumanInterface::showTrajectory(unsigned long int iTimeStep, Memory& memory)
 
   Serial.println("Time (s); Altitude (m)");
 
-  for (i = 0; i < memory.getSize() / 2 - 1; i++)
+  int i = 0;
+  while ( memory.hasNext() )
   {
     Serial.print(i * fTimeStep);
     Serial.print("    ");
     Serial.println(memory.readAltitude());
+    ++i;
   }
 
   memory.restartPosition();

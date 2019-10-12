@@ -176,3 +176,33 @@ bool Memory::erase()
   setState(MemoryState::empty);
 
 };
+
+
+bool Memory::hasNext()
+{
+
+  // First check for end of memory
+  if (position > memorySize - 2)
+  {
+    return false;
+  }
+  else // Otherwise, checks if there is a valid altitude
+  {
+    int quotient;
+    int rest;
+
+    quotient = EEPROM.read(position);
+    rest = EEPROM.read(position + 1);
+
+    // If current read is not a valid altitude, return false
+    if ( quotient == 0 && rest == 0 )
+    {
+      return false;
+    }
+    else // Otherwise, return true
+    {
+      return true;
+    }
+  }
+
+}
