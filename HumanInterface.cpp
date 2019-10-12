@@ -107,7 +107,7 @@ void HumanInterface::showTrajectory(unsigned long int iTimeStep, Memory& memory)
 }
 
 
-bool HumanInterface::blinkNumber(int n)
+void HumanInterface::blinkNumber(int n)
 {
 
   int i;

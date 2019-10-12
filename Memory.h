@@ -47,10 +47,10 @@ class Memory
     bool writeApogee();
 
     // Erase memory
-    bool erase();
+    void erase();
 
     // Restart position
-    bool restartPosition();
+    void restartPosition();
     
     // Is there a next value?
     bool hasNext();
@@ -58,15 +58,15 @@ class Memory
   private:
 
     // Set the memory state
-    bool setState(MemoryState);
+    void setState(MemoryState);
 
   private:
 
     // Position of the memory
-    unsigned short position;
+    unsigned int position;
 
     // Apogee
-    unsigned short apogee;
+    unsigned int apogee;
 
     // Memory state
     MemoryState state;

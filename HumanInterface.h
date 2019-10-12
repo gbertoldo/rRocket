@@ -66,7 +66,7 @@ class HumanInterface
   private:
   
     // Blinks a number
-    bool blinkNumber(int n);
+    void blinkNumber(int n);
 };
 
 #endif // HUMANINTERFACE_H

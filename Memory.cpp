@@ -24,7 +24,7 @@ bool Memory::begin()
 }
 
 
-bool Memory::setState(MemoryState currentState)
+void Memory::setState(MemoryState currentState)
 {
 
   state = currentState;
@@ -44,14 +44,6 @@ MemoryState Memory::getState()
 {
 
   return state;
-
-}
-
-
-bool Memory::restartPosition()
-{
-
-  position = 2;
 
 }
 
@@ -159,7 +151,7 @@ float Memory::readApogee()
 }
 
 
-bool Memory::erase()
+void Memory::erase()
 {
 
   int i;
@@ -176,6 +168,14 @@ bool Memory::erase()
   setState(MemoryState::empty);
 
 };
+
+
+void Memory::restartPosition()
+{
+
+  position = 2;
+
+}
 
 
 bool Memory::hasNext()
