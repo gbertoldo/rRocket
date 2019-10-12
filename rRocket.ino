@@ -30,14 +30,14 @@
 #include "RecoverySystem.h"
 
 
-// Creates an instance of Recovery class
+// Creates an instance of RecoverySystem class
 RecoverySystem recoverySystem;
 
 
 void setup()
 {
 
-  // Initializing recovery
+  // Initializing recovery system
   recoverySystem.begin();
 
 }
@@ -45,7 +45,7 @@ void setup()
 
 void loop() {
 
-  // Running recovery
+  // Running recovery system
   recoverySystem.run();
 
 }

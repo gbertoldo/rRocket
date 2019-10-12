@@ -5,27 +5,15 @@
 bool Barometer::begin()
 {
 
+  Wire.begin();
+
   if ( searchBarometerAddress ) barometerAddress = getBarometerAddress();
 
   while (!barometer.begin(barometerAddress)) {}
 
   baseline = barometer.readAltitude(1013.25);
 
-}
-
-
-float Barometer::getBaseHeight()
-{
-
-  
-
-}
-
-
-bool Barometer::setBaseHeight(float)
-{
-
-  int i;
+  return true;
 
 }
 
@@ -33,22 +21,20 @@ bool Barometer::setBaseHeight(float)
 float Barometer::getAltitude()
 {
 
+  float altitude = barometer.readAltitude() - baseline;
 
-}
+  if ( altitude > apogee ) apogee = altitude;
 
-
-bool Barometer::setApogee(float)
-{
-
-  int i;
+  return altitude;
 
 }
 
 
 float Barometer::getApogee()
 {
-  
+  return apogee;
 }
+
 
 byte Barometer::getBarometerAddress()
 {

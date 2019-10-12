@@ -1,0 +1,13 @@
+Guilherme
+   Arquivos em manutenção
+      - Actuator.*
+   Arquivos modificados (concluídos)
+      - Button.*
+      - Barometer.*
+      - Memory.*
+      - TimerCountDown.*
+      - Timer.*
+
+TODO
+Check memory initialization
+Check barometer initialization
