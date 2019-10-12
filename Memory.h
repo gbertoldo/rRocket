@@ -49,11 +49,13 @@ class Memory
     // Erase memory
     bool erase();
 
-    // Set the memory state
-    bool setState(MemoryState);
-
     // Restart position
     bool restartPosition();
+
+  private:
+
+    // Set the memory state
+    bool setState(MemoryState);
 
   private:
 
