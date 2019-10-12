@@ -16,7 +16,6 @@
 #include "Memory.h"
 #include "Button.h"
 #include "Actuator.h"
-#include "Timer.h"
 #include "HumanInterface.h"
 
 /*
