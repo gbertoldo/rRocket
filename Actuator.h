@@ -1,11 +1,11 @@
 
 
-    /**************************************************************************\
-   /            rRocket: An Arduino powered rocketry recovery system            \
-  /              Federal University of Technology - Parana - Brazil              \
-  \                by Guilherme Bertoldo and Jonas Joacir Radtke                 /
-   \                         updated October 12, 2019                           /
-    \**************************************************************************/
+    /**********************************************************************\
+   /          rRocket: An Arduino powered rocketry recovery system          \
+  /            Federal University of Technology - Parana - Brazil            \
+  \              by Guilherme Bertoldo and Jonas Joacir Radtke               /
+   \                       updated October 18, 2019                         /
+    \**********************************************************************/
 
 
 #ifndef ACTUATOR_H
@@ -21,6 +21,7 @@
 
 class Actuator
 {
+  
   public:
 
     // Initializes Actuator object
@@ -31,6 +32,13 @@ class Actuator
 
     // Deploys drogue chute
     void deployDrogueChute();
+
+  private:
+
+    unsigned long int timeDrogueChuteActive {500};              // time that drogue-chute need to be active
+    unsigned long int timeParachuteActive {500};                // time that parachute need to be active
+    unsigned long int timeDrogueChuteWasActivated {0};          // time in that drogue chute was activated
+    unsigned long int timeParachuteWasActivated {0};            // time in that parachute was activated
 
 };
 

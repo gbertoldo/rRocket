@@ -1,3 +1,13 @@
+
+
+    /**********************************************************************\
+   /          rRocket: An Arduino powered rocketry recovery system          \
+  /            Federal University of Technology - Parana - Brazil            \
+  \              by Guilherme Bertoldo and Jonas Joacir Radtke               /
+   \                       updated October 18, 2019                         /
+    \**********************************************************************/
+
+
 #include "Barometer.h"
 
 bool Barometer::begin()
@@ -5,11 +15,12 @@ bool Barometer::begin()
 
   Wire.begin();
 
-  if ( searchBarometerAddress ) {
+  if ( searchBarometerAddress )
+  {
 
     // Searching for barometer address
     if ( ! getBarometerAddress(barometerAddress) ) return false;
-    
+
   }
 
   // Initializing BMP
@@ -36,7 +47,9 @@ float Barometer::getAltitude()
 
 float Barometer::getApogee()
 {
+
   return apogee;
+
 }
 
 
@@ -59,12 +72,10 @@ bool Barometer::getBarometerAddress(byte& address)
 
       address = addr;
     }
+
   }
 
-  if ( counter != 1 )
-  {
-    return false;
-  }
+  if ( counter != 1 ) return false;
 
   return true;
 

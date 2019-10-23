@@ -1,11 +1,11 @@
 
 
-    /**************************************************************************\
-   /            rRocket: An Arduino powered rocketry recovery system            \
-  /              Federal University of Technology - Parana - Brazil              \
-  \                by Guilherme Bertoldo and Jonas Joacir Radtke                 /
-   \                         updated October 12, 2019                           /
-    \**************************************************************************/
+    /**********************************************************************\
+   /          rRocket: An Arduino powered rocketry recovery system          \
+  /            Federal University of Technology - Parana - Brazil            \
+  \              by Guilherme Bertoldo and Jonas Joacir Radtke               /
+   \                       updated October 18, 2019                         /
+    \**********************************************************************/
 
 
 #ifndef HUMANINTERFACE_H
@@ -32,7 +32,13 @@ class HumanInterface
     void showInitMessage();
 
     // Shows ready to launch messages
-    void blinkReadyToLaunch();
+    void showReadyToLaunchStatus();
+
+    // Shows to user the flying status
+    void showFlyingStatus();
+
+    // Shows to user the recovered status
+    void showRecoveredStatus();
 
     // Blinks apogee
     void blinkApogee(Memory& memory);
@@ -63,10 +69,12 @@ class HumanInterface
     {
       Serial.println(msg, par);
     }
+
   private:
-  
+
     // Blinks a number
     void blinkNumber(int n);
+
 };
 
 #endif // HUMANINTERFACE_H

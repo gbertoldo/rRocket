@@ -1,3 +1,13 @@
+
+
+    /**********************************************************************\
+   /          rRocket: An Arduino powered rocketry recovery system          \
+  /            Federal University of Technology - Parana - Brazil            \
+  \              by Guilherme Bertoldo and Jonas Joacir Radtke               /
+   \                       updated October 18, 2019                         /
+    \**********************************************************************/
+
+
 #include "Actuator.h"
 #include "Arduino.h"
 #include "Parameters.h"
@@ -17,16 +27,45 @@ bool Actuator::begin()
 
 }
 
+
 void Actuator::deployParachute()
 {
 
-  digitalWrite(Parameters::pinParachute, HIGH);
+  if (timeParachuteWasActivated == 0) timeParachuteWasActivated = millis();
+  
+  if ( abs(millis() - timeParachuteWasActivated) < timeParachuteActive)
+  {
+    
+    digitalWrite(Parameters::pinParachute, HIGH);
+  
+  }
+  else
+  {
+  
+    digitalWrite(Parameters::pinDrogueChute, LOW);
+    digitalWrite(Parameters::pinParachute, LOW);
+  
+  }
 
 }
+
 
 void Actuator::deployDrogueChute()
 {
 
-  digitalWrite(Parameters::pinDrogueChute, HIGH);
+  if (timeDrogueChuteWasActivated == 0) timeDrogueChuteWasActivated = millis();
+  
+  if ( abs(millis() - timeDrogueChuteWasActivated) < timeDrogueChuteActive)
+  {
+    
+    digitalWrite(Parameters::pinDrogueChute, HIGH);
+  
+  }
+  else
+  {
+  
+    digitalWrite(Parameters::pinDrogueChute, LOW);
 
-}
+  }
+
+};

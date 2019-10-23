@@ -1,3 +1,13 @@
+
+
+    /**********************************************************************\
+   /          rRocket: An Arduino powered rocketry recovery system          \
+  /            Federal University of Technology - Parana - Brazil            \
+  \              by Guilherme Bertoldo and Jonas Joacir Radtke               /
+   \                       updated October 18, 2019                         /
+    \**********************************************************************/
+
+
 #include "Arduino.h"
 #include "Memory.h"
 #include <EEPROM.h>
@@ -7,10 +17,10 @@ bool Memory::begin()
 {
 
   restartPosition(); // initial position to read or write the height
-  apogee = 0; // initial value to apogee
+  apogee = readApogee(); // initial value to apogee
   memorySize = EEPROM.length(); // EEPROM size of the Arduino (bytes)
 
-  if (readApogee() > 0)
+  if (apogee > 0)
   {
     setState(MemoryState::full);
   }
@@ -184,10 +194,13 @@ bool Memory::hasNext()
   // First check for end of memory
   if (position > memorySize - 2)
   {
+
     return false;
+
   }
   else // Otherwise, checks if there is a valid altitude
   {
+
     int quotient;
     int rest;
 
@@ -197,12 +210,17 @@ bool Memory::hasNext()
     // If current read is not a valid altitude, return false
     if ( quotient == 0 && rest == 0 )
     {
+
       return false;
+
     }
     else // Otherwise, return true
     {
+
       return true;
+
     }
+
   }
 
-}
+};

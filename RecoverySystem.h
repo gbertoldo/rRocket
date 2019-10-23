@@ -1,11 +1,11 @@
 
 
-    /**************************************************************************\
-   /            rRocket: An Arduino powered rocketry recovery system            \
-  /              Federal University of Technology - Parana - Brazil              \
-  \                by Guilherme Bertoldo and Jonas Joacir Radtke                 /
-   \                         updated October 12, 2019                           /
-    \**************************************************************************/
+    /**********************************************************************\
+   /          rRocket: An Arduino powered rocketry recovery system          \
+  /            Federal University of Technology - Parana - Brazil            \
+  \              by Guilherme Bertoldo and Jonas Joacir Radtke               /
+   \                       updated October 18, 2019                         /
+    \**********************************************************************/
 
 
 #ifndef RECOVERYSYSTEM_H
@@ -95,9 +95,9 @@ class RecoverySystem
     HumanInterface           humanInterface; // Interface for communication with humans
     Actuator                       actuator; // Actuator for deployment of drogue and parachute
 
-    static constexpr unsigned long int timeStep  {500}; // Time step for registering altitude (ms)
-    int                                       n   {4};  // Size of 'altitude' vector
-    float                           altitude[4];        // Initial altitudes
+    static constexpr unsigned long int timeStep  {250}; // Time step for registering altitude (ms)
+    int                                       n   {8};  // Size of 'altitude' vector
+    float                           altitude[8];        // Initial altitudes
 
 };
 

@@ -1,3 +1,13 @@
+
+
+    /**********************************************************************\
+   /          rRocket: An Arduino powered rocketry recovery system          \
+  /            Federal University of Technology - Parana - Brazil            \
+  \              by Guilherme Bertoldo and Jonas Joacir Radtke               /
+   \                       updated October 18, 2019                         /
+    \**********************************************************************/
+
+
 #include "Arduino.h"
 #include "Button.h"
 
@@ -20,10 +30,12 @@ ButtonState Button::getState()
   cstate = digitalRead(pin);
 
   // If button is currently realeased
-  if ( cstate == 0 ) {
+  if ( cstate == 0 )
+  {
 
     // If button was released before
-    if ( pstate == 0 ) {
+    if ( pstate == 0 )
+    {
 
       pstate = cstate;
 
@@ -39,22 +51,29 @@ ButtonState Button::getState()
       unsigned long int T1 = millis() - T0;
 
       // If short pressed
-      if ( 5 < T1 && T1 < refTime ) {
+      if ( 5 < T1 && T1 < refTime )
+      {
 
         return ButtonState::pressedAndReleased;
 
       }
       else
       {
+
         return ButtonState::released;
+
       }
+
     }
+
   }
   // If button is currently pressed
   else
   {
+
     // If button was released before
-    if ( pstate == 0 ) {
+    if ( pstate == 0 )
+    {
 
       pstate = cstate;
 
@@ -69,14 +88,17 @@ ButtonState Button::getState()
 
       pstate = cstate;
 
-      if ( (millis() - T0) >= refTime ) {
+      if ( (millis() - T0) >= refTime )
+      {
 
         return ButtonState::longPressed;
 
       }
       else
       {
+
         return ButtonState::pressed;
+
       }
 
     }

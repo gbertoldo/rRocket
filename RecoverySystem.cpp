@@ -1,3 +1,13 @@
+
+
+    /**********************************************************************\
+   /          rRocket: An Arduino powered rocketry recovery system          \
+  /            Federal University of Technology - Parana - Brazil            \
+  \              by Guilherme Bertoldo and Jonas Joacir Radtke               /
+   \                       updated October 18, 2019                         /
+    \**********************************************************************/
+
+
 #include "RecoverySystem.h"
 #include "Parameters.h"
 
@@ -20,27 +30,39 @@ bool RecoverySystem::begin()
   // Initializing button
   button.begin(Parameters::pinButton);
 
+  // Pin used in the button as 5V
+  pinMode(Parameters::pinButtonVCCSource, OUTPUT);
+  digitalWrite(Parameters::pinButtonVCCSource, HIGH);
+
   // Initializing EEPROM memory, barometer and actuator (these modules are critical, so their initialization must be checked)
   if ( memory.begin() && barometer.begin() && actuator.begin() )
   {
 
     switch (memory.getState())
     {
+
       case MemoryState::full:
         state = RecoverySystemState::recovered;
         break;
+
       case MemoryState::empty:
         state = RecoverySystemState::readyToLaunch;
         break;
+
       default:
         humanInterface.println(" Recovery system fatal error: unknown memory state. Stopping...\n");
         while (true);
+
     }
-  } else
+
+  }
+  else
   {
+
     humanInterface.println(" Recovery system fatal error: unable to initialize recovery system...\n");
 
     while (true) {};
+
   }
 
 };
@@ -52,32 +74,29 @@ void RecoverySystem::run()
   // Recovery system's actions depend on recovery system's state.
   switch (state)
   {
+
     case RecoverySystemState::readyToLaunch:
-
       readyToLaunchRun();
-
       break;
+
     case RecoverySystemState::flying:
-
       flyingRun();
-
       break;
+
     case RecoverySystemState::drogueChuteActive:
-
       drogueChuteActiveRun();
-
       break;
+
     case RecoverySystemState::parachuteActive:
-
       parachuteActiveRun();
-
       break;
+
     case RecoverySystemState::recovered:
-
       recoveredRun();
-
       break;
+
     default:;
+
   }
 
 }
@@ -85,6 +104,7 @@ void RecoverySystem::run()
 
 void RecoverySystem::readyToLaunchRun()
 {
+
   // Registering altitude without writing to memory
   // Writing to memory is performed only after liftoff
   registerAltitude(false);
@@ -94,6 +114,7 @@ void RecoverySystem::readyToLaunchRun()
            Scanning for liftoff
 
   */
+
   bool isFlying = false;
 
   if ( abs(altitude[n - 1] - altitude[0]) > Parameters::displacementForLiftoffDetection) isFlying = true;
@@ -104,48 +125,59 @@ void RecoverySystem::readyToLaunchRun()
       'parachuteActive'.
   */
 
-
-
   // If flying, stores data to memory and changes recovery system's state
   if ( isFlying ) {
+
     // Storing data to memory
     for (int i = 0; i < n; i++) memory.writeAltitude(altitude[i]);
 
     // Changing recovery system's state
     state = RecoverySystemState::flying;
+
   }
   else
   {
+
     // Blink recovery system is ready to launch
-    humanInterface.blinkReadyToLaunch();
+    humanInterface.showReadyToLaunchStatus();
+
   }
+
 }
 
 
 void RecoverySystem::flyingRun()
 {
+
   // Registering altitude and writing to memory
   registerAltitude(true);
+
+  // Shows to user the flying status
+  humanInterface.showFlyingStatus();
 
   // Checks for falling down
   bool isFallingDown = false;
 
-  if ( abs( altitude[n - 1] - barometer.getApogee() ) > Parameters::displacementForDrogueChuteDeployment )  isFallingDown = true;
+  if ( abs( altitude[n - 1] - barometer.getApogee() ) > Parameters::displacementForDrogueChuteDeployment ) isFallingDown = true;
 
   // If rocket is falling down, activates drogue chute and changes recovery system's state
   if ( isFallingDown )
   {
+
     // Deploying drogue chute
     actuator.deployDrogueChute();
 
     // Changing recovery system's state
     state = RecoverySystemState::drogueChuteActive;
+
   }
+
 }
 
 
 void RecoverySystem::drogueChuteActiveRun()
 {
+
   // Registers altitude and writes to memory
   registerAltitude(true);
 
@@ -160,20 +192,24 @@ void RecoverySystem::drogueChuteActiveRun()
   // If rocket is falling down bellow parachute activation altitude, activates parachute and changes recovery system's state
   if ( parachuteActivation )
   {
+
     // Deploying parachute
     actuator.deployParachute();
-    
+
     // Saving apogee
     memory.writeApogee();
 
     // Changing recovery system's state
     state = RecoverySystemState::parachuteActive;
+
   }
+
 }
 
 
 void RecoverySystem::parachuteActiveRun()
 {
+
   // Registers altitude and writes to memory
   registerAltitude(true);
 
@@ -188,21 +224,27 @@ void RecoverySystem::parachuteActiveRun()
   // If rocket is recovered, changes recovery system's state
   if ( isRecovered )
   {
+
     // Changing recovery system's state
     state = RecoverySystemState::recovered;
+
   }
+
 }
 
 
 void RecoverySystem::recoveredRun()
 {
-  // Blinking apogee
-  humanInterface.blinkApogee(memory);
+
+  // Shows to user the recovered status
+  humanInterface.showRecoveredStatus();
 
   // Reading button
   switch (button.getState())
   {
+
     case ButtonState::pressedAndReleased:
+      humanInterface.blinkApogee(memory);
       humanInterface.showApogee(memory);
       humanInterface.showTrajectory(timeStep, memory);
       break;
@@ -215,12 +257,15 @@ void RecoverySystem::recoveredRun()
       break;
 
     default:;
+
   };
+
 }
 
 
 void RecoverySystem::registerAltitude(bool writeToMemory)
 {
+
   static unsigned long int currentStep = 0;
 
   if (millis() / timeStep > currentStep)
@@ -236,4 +281,5 @@ void RecoverySystem::registerAltitude(bool writeToMemory)
 
     if (writeToMemory) memory.writeAltitude(altitude[n - 1]);
   }
-}
+
+};

@@ -1,11 +1,11 @@
 
 
-    /**************************************************************************\
-   /            rRocket: An Arduino powered rocketry recovery system            \
-  /              Federal University of Technology - Parana - Brazil              \
-  \                by Guilherme Bertoldo and Jonas Joacir Radtke                 /
-   \                         updated October 12, 2019                           /
-    \**************************************************************************/
+    /**********************************************************************\
+   /          rRocket: An Arduino powered rocketry recovery system          \
+  /            Federal University of Technology - Parana - Brazil            \
+  \              by Guilherme Bertoldo and Jonas Joacir Radtke               /
+   \                       updated October 18, 2019                         /
+    \**********************************************************************/
 
 
 #ifndef MEMORY_H
@@ -51,7 +51,7 @@ class Memory
 
     // Restart position
     void restartPosition();
-    
+
     // Is there a next value?
     bool hasNext();
 

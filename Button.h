@@ -1,11 +1,11 @@
 
 
-    /**************************************************************************\
-   /            rRocket: An Arduino powered rocketry recovery system            \
-  /              Federal University of Technology - Parana - Brazil              \
-  \                by Guilherme Bertoldo and Jonas Joacir Radtke                 /
-   \                         updated October 12, 2019                           /
-    \**************************************************************************/
+    /**********************************************************************\
+   /          rRocket: An Arduino powered rocketry recovery system          \
+  /            Federal University of Technology - Parana - Brazil            \
+  \              by Guilherme Bertoldo and Jonas Joacir Radtke               /
+   \                       updated October 18, 2019                         /
+    \**********************************************************************/
 
 
 #ifndef BUTTON_H
@@ -20,8 +20,8 @@
            longPressed: at time button state was read, it was pressed by a time greater or equal to refTime (user defined reference time)
 */
 
-enum class ButtonState {released, pressed, pressedAndReleased, longPressed};
 
+enum class ButtonState {released, pressed, pressedAndReleased, longPressed};
 
 
 /*
@@ -34,6 +34,7 @@ class Button
 {
 
   public:
+
     // Initializes
     bool begin(unsigned short pin, unsigned long int refTime = 1500);
 

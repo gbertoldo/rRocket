@@ -1,12 +1,23 @@
+
+
+    /**********************************************************************\
+   /          rRocket: An Arduino powered rocketry recovery system          \
+  /            Federal University of Technology - Parana - Brazil            \
+  \              by Guilherme Bertoldo and Jonas Joacir Radtke               /
+   \                       updated October 18, 2019                         /
+    \**********************************************************************/
+
+
 #include "Parameters.h"
 
 namespace Parameters
 {
 
 const int                                 pinLed  {13};
-const int                              pinBuzzer   {3};
-const int                              pinButton  {12};
-const int                         pinDrogueChute   {7};
+const int                              pinBuzzer   {6};
+const int                              pinButton  {10};
+const int                     pinButtonVCCSource  {12};
+const int                         pinDrogueChute   {3};
 const int                           pinParachute   {5};
 const float      displacementForLiftoffDetection  {10};
 const float displacementForDrogueChuteDeployment   {5};

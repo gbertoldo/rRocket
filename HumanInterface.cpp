@@ -1,17 +1,30 @@
+
+
+    /**********************************************************************\
+   /          rRocket: An Arduino powered rocketry recovery system          \
+  /            Federal University of Technology - Parana - Brazil            \
+  \              by Guilherme Bertoldo and Jonas Joacir Radtke               /
+   \                       updated October 18, 2019                         /
+    \**********************************************************************/
+
+
 #include "HumanInterface.h"
 #include "Parameters.h"
 
 
 void HumanInterface::begin()
 {
+
   Serial.begin(9600);
 
   pinMode(Parameters::pinLed, OUTPUT);
+
 }
 
 
 void HumanInterface::showInitMessage()
 {
+
   // Clear Serial Monitor
   for (int j = 0; j < 100; ++j) Serial.print("\n");
 
@@ -19,11 +32,13 @@ void HumanInterface::showInitMessage()
   Serial.println(" rRocket: An Arduino powered rocketry recovery system\n");
   Serial.println(" Federal University of Technology - Parana - Brazil\n");
   Serial.println(" Initializing Rocket Recovery System...\n");
+
 }
 
 
-void HumanInterface::blinkReadyToLaunch()
+void HumanInterface::showReadyToLaunchStatus()
 {
+
   unsigned long time;
   unsigned long timeStep = 750; // Time step to blink
 
@@ -31,12 +46,35 @@ void HumanInterface::blinkReadyToLaunch()
 
   if (time % (2 * timeStep) < timeStep)
   {
+
     digitalWrite(Parameters::pinLed, HIGH);
+    tone(Parameters::pinBuzzer, 500);
+
   }
   else
   {
+
     digitalWrite(Parameters::pinLed, LOW);
+    noTone(Parameters::pinBuzzer);
+
   }
+
+}
+
+
+void HumanInterface::showFlyingStatus()
+{
+
+  digitalWrite(Parameters::pinLed, HIGH);
+
+}
+
+
+void HumanInterface::showRecoveredStatus()
+{
+
+  digitalWrite(Parameters::pinLed, LOW);
+
 }
 
 
@@ -73,18 +111,18 @@ void HumanInterface::blinkApogee(Memory& memory)
 
 void HumanInterface::showApogee(Memory& memory)
 {
+
   Serial.println("");
-  Serial.println("Reading apogee. Please wait...");
   Serial.print("Apogee (m) = ");
   Serial.println(memory.readApogee());
   Serial.println("");
+
 }
 
 
 void HumanInterface::showTrajectory(unsigned long int iTimeStep, Memory& memory)
 {
 
-  
   float fTimeStep;
 
   fTimeStep = (float)iTimeStep;
@@ -98,12 +136,13 @@ void HumanInterface::showTrajectory(unsigned long int iTimeStep, Memory& memory)
   while ( memory.hasNext() )
   {
     Serial.print(i * fTimeStep);
-    Serial.print("    ");
+    Serial.print("; ");
     Serial.println(memory.readAltitude());
     ++i;
   }
 
   memory.restartPosition();
+
 }
 
 

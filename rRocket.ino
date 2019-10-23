@@ -2,16 +2,16 @@
 
        ^
        |
-       |                                        ____
-       |                                    ****    ****
+       |                                        ****
+       |                                  ******    *****
        |                              *****             ******
        |                           ***                        ****
        |                        ***                              ***
        |                      **                                   ****
-       |                    **                rRocket                 ***
-       |                 ***                                             *
-       |                **       An Arduino powered recovery system       ***
-       |              **                                                    **
+       |                    **                                        ***
+       |                 ***                  rRocket                    *
+       |                **                                                ***
+       |              **     An Arduino powered rocketry recovery system    **
        |            ***                                                       **
        |           **                                                          *
        |         **
@@ -21,7 +21,7 @@
        |    **
        |   *                   FRANCISCO BELTRAO  -  PARANA  -  BRAZIL
        |  **
-       | *                  by Jonas Joacir Radtke and Guilherme Bertoldo
+       | *                  by Guilherme Bertoldo and Jonas Joacir Radtke
        |*
        +-------------------------------------------------------------------------------->
 
