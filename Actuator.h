@@ -35,8 +35,6 @@ class Actuator
 
   private:
 
-    unsigned long int timeDrogueChuteActive {500};              // time that drogue-chute need to be active
-    unsigned long int timeParachuteActive {500};                // time that parachute need to be active
     unsigned long int timeDrogueChuteWasActivated {0};          // time in that drogue chute was activated
     unsigned long int timeParachuteWasActivated {0};            // time in that parachute was activated
 

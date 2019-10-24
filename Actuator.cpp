@@ -33,7 +33,7 @@ void Actuator::deployParachute()
 
   if (timeParachuteWasActivated == 0) timeParachuteWasActivated = millis();
   
-  if ( abs(millis() - timeParachuteWasActivated) < timeParachuteActive)
+  if ( abs(millis() - timeParachuteWasActivated) < Parameters::timeParachuteActive)
   {
     
     digitalWrite(Parameters::pinParachute, HIGH);
@@ -55,7 +55,7 @@ void Actuator::deployDrogueChute()
 
   if (timeDrogueChuteWasActivated == 0) timeDrogueChuteWasActivated = millis();
   
-  if ( abs(millis() - timeDrogueChuteWasActivated) < timeDrogueChuteActive)
+  if ( abs(millis() - timeDrogueChuteWasActivated) < Parameters::timeDrogueChuteActive)
   {
     
     digitalWrite(Parameters::pinDrogueChute, HIGH);

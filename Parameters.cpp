@@ -23,5 +23,7 @@ const float      displacementForLiftoffDetection  {10};
 const float displacementForDrogueChuteDeployment   {5};
 const float          parachuteDeploymentAltitude {200};
 const float     displacementForRecoveryDetection {2.0};
+const unsigned long int    timeDrogueChuteActive {500}; 
+const unsigned long int      timeParachuteActive {500};
 
 }
