@@ -16,7 +16,7 @@
 
 /*
 
-   HumanInterface provides communication between humans and recovery system
+   HumanInterface provides communication between humans and the recovery system
 
 */
 
@@ -75,7 +75,7 @@ class HumanInterface
     // Blinks a number
     void blinkNumber(int n);
 
-    // Last time of the message on serial monitor
+    // Last time of the message on the serial monitor
     unsigned long int timeOfTheLastMessage;
 
 };

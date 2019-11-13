@@ -103,7 +103,7 @@ void HumanInterface::showRecoveredStatus()
   {
 
     Serial.println("\n Recovery system is recovered!");
-    Serial.println("   Option 1 - Press the button quickly to recovery datas.");
+    Serial.println("   Option 1 - Press the button quickly to recovery data.");
     Serial.println("   Option 2 - Press and hold by 3 seconds to erase memory.\n");
     timeOfTheLastMessage = currentTime;
     

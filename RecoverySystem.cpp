@@ -119,9 +119,9 @@ void RecoverySystem::readyToLaunchRun()
 
   if ( abs(altitude[n - 1] - altitude[0]) > Parameters::displacementForLiftoffDetection) isFlying = true;
   /*
-      Why using absolute value for altitude variation? Suppose recovery system suffer a failure during flight,
-      turn off and turn on again. If it is falling down, altitude variation will be negative and the above conditional
-      will be fullfiled. Recovery system will change state to 'flying' and soon to 'drogrueChuteActive' or
+      Why using absolute value for altitude variation? Suppose the recovery system suffers a failure during flight,
+      turn off and turn on again. If it is falling, altitude variation will be negative and the above conditional
+      will be fulfilled. Recovery system will change state to 'flying' and soon to 'drogrueChuteActive' or
       'parachuteActive'.
   */
 
@@ -138,7 +138,7 @@ void RecoverySystem::readyToLaunchRun()
   else
   {
 
-    // Blink recovery system is ready to launch
+    // Showing recovery system is ready to launch
     humanInterface.showReadyToLaunchStatus();
 
   }
@@ -155,13 +155,13 @@ void RecoverySystem::flyingRun()
   // Shows to user the flying status
   humanInterface.showFlyingStatus();
 
-  // Checks for falling down
-  bool isFallingDown = false;
+  // Checks for falling state
+  bool isFalling = false;
 
-  if ( abs( altitude[n - 1] - barometer.getApogee() ) > Parameters::displacementForDrogueChuteDeployment ) isFallingDown = true;
+  if ( abs( altitude[n - 1] - barometer.getApogee() ) > Parameters::displacementForDrogueChuteDeployment ) isFalling = true;
 
   // If rocket is falling down, activates drogue chute and changes recovery system's state
-  if ( isFallingDown )
+  if ( isFalling )
   {
 
     // Deploying drogue chute
@@ -189,7 +189,7 @@ void RecoverySystem::drogueChuteActiveRun()
 
   if ( altitude[n - 1] <= Parameters::parachuteDeploymentAltitude ) parachuteActivation = true;
 
-  // If rocket is falling down bellow parachute activation altitude, activates parachute and changes recovery system's state
+  // If rocket is falling bellow parachute activation altitude, activates parachute and changes recovery system's state
   if ( parachuteActivation )
   {
 
