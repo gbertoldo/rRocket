@@ -14,6 +14,7 @@
 namespace Parameters
 {
 
+  extern const char*                      softwareVersion; // Version of this software
   extern const int                                 pinLed; // Screen uses pin 13 to blink Arduino internal led
   extern const int                              pinBuzzer; // Pin of buzzer
   extern const int                              pinButton; // Pin of button

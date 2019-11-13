@@ -34,6 +34,9 @@ void HumanInterface::showInitMessage()
   Serial.println(" rRocket: An Arduino powered rocketry recovery system\n");
   Serial.println(" Federal University of Technology - Parana - Brazil\n");
   Serial.println(" Initializing Rocket Recovery System...\n");
+  Serial.print  ("\n ");
+  Serial.println(Parameters::softwareVersion);
+  Serial.println("");
 
 }
 
@@ -103,6 +106,8 @@ void HumanInterface::showRecoveredStatus()
   {
 
     Serial.println("\n Recovery system is recovered!");
+    Serial.print(  "   ");
+    Serial.println(Parameters::softwareVersion);
     Serial.println("   Option 1 - Press the button quickly to recovery data.");
     Serial.println("   Option 2 - Press and hold by 3 seconds to erase memory.\n");
     timeOfTheLastMessage = currentTime;
