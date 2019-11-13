@@ -171,7 +171,7 @@ void Memory::erase()
 
   restartPosition();
 
-  for (i = 0; i <= memorySize; i++) EEPROM.write(i, 0);
+  for (i = 0; i < memorySize; i++) EEPROM.write(i, 0);
 
   restartPosition();
 
