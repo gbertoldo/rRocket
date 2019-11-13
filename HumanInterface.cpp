@@ -19,6 +19,8 @@ void HumanInterface::begin()
 
   pinMode(Parameters::pinLed, OUTPUT);
 
+  timeOfTheLastMessage = millis();
+
 }
 
 
@@ -39,22 +41,41 @@ void HumanInterface::showInitMessage()
 void HumanInterface::showReadyToLaunchStatus()
 {
 
-  unsigned long time;
+  unsigned long currentTime;
   unsigned long timeStep = 750; // Time step to blink
 
-  time = millis();
+  currentTime = millis();
 
-  if (time % (2 * timeStep) < timeStep)
+  if ( currentTime - timeOfTheLastMessage > 2000 )
+  {
+
+    Serial.println("\n Recovery system is ready to launch!\n");
+    timeOfTheLastMessage = currentTime;
+    
+  }
+
+  if (currentTime % (2 * timeStep) < timeStep)
   {
 
     digitalWrite(Parameters::pinLed, HIGH);
-    tone(Parameters::pinBuzzer, 500);
 
   }
   else
   {
 
     digitalWrite(Parameters::pinLed, LOW);
+
+  }
+
+  if (currentTime % (2 * timeStep) < timeStep / 8)
+  {
+
+    tone(Parameters::pinBuzzer, 600);
+
+  }
+  else
+  {
+
     noTone(Parameters::pinBuzzer);
 
   }
@@ -66,12 +87,27 @@ void HumanInterface::showFlyingStatus()
 {
 
   digitalWrite(Parameters::pinLed, HIGH);
+  noTone(Parameters::pinBuzzer);
 
 }
 
 
 void HumanInterface::showRecoveredStatus()
 {
+
+  unsigned long int currentTime;
+
+  currentTime = millis();
+  
+  if ( currentTime - timeOfTheLastMessage > 2000 )
+  {
+
+    Serial.println("\n Recovery system is recovered!");
+    Serial.println("   Option 1 - Press the button quickly to recovery datas.");
+    Serial.println("   Option 2 - Press and hold by 3 seconds to erase memory.\n");
+    timeOfTheLastMessage = currentTime;
+    
+  }
 
   digitalWrite(Parameters::pinLed, LOW);
 
@@ -154,19 +190,25 @@ void HumanInterface::blinkNumber(int n)
   if (n == 0)
   {
     digitalWrite(Parameters::pinLed, LOW);
+    noTone(Parameters::pinBuzzer);
     delay(300);
     digitalWrite(Parameters::pinLed, HIGH);
+    tone(Parameters::pinBuzzer, 600);
     delay(1000);
     digitalWrite(Parameters::pinLed, LOW);
+    noTone(Parameters::pinBuzzer);
   }
 
   for (i = 1; i <= n; i++)
   {
     digitalWrite(Parameters::pinLed, LOW);
+    noTone(Parameters::pinBuzzer);
     delay(300);
     digitalWrite(Parameters::pinLed, HIGH);
+    tone(Parameters::pinBuzzer, 600);
     delay(300);
     digitalWrite(Parameters::pinLed, LOW);
+    noTone(Parameters::pinBuzzer);
   }
 
   delay(500);

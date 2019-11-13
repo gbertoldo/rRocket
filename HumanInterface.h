@@ -75,6 +75,9 @@ class HumanInterface
     // Blinks a number
     void blinkNumber(int n);
 
+    // Last time of the message on serial monitor
+    unsigned long int timeOfTheLastMessage;
+
 };
 
 #endif // HUMANINTERFACE_H

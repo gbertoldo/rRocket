@@ -171,7 +171,7 @@ void Memory::erase()
 
   restartPosition();
 
-  for (i = 0; i < memorySize / 2 - 1; i++) writeAltitude(0);
+  for (i = 0; i <= memorySize; i++) EEPROM.write(i, 0);
 
   restartPosition();
 
@@ -201,8 +201,8 @@ bool Memory::hasNext()
   else // Otherwise, checks if there is a valid altitude
   {
 
-    int quotient;
-    int rest;
+    byte quotient;
+    byte rest;
 
     quotient = EEPROM.read(position);
     rest = EEPROM.read(position + 1);
