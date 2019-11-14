@@ -32,6 +32,9 @@ class Barometer
 
     // Get apogee
     float getApogee();
+    
+    // Set baseline
+    void setBaseline(float baseline);
 
   private:
 

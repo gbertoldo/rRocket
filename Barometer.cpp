@@ -53,6 +53,14 @@ float Barometer::getApogee()
 }
 
 
+void Barometer::setBaseline(float baseline)
+{
+   
+   this->baseline = baseline;
+   
+}
+
+
 bool Barometer::getBarometerAddress(byte& address)
 {
 

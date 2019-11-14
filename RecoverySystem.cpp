@@ -128,9 +128,22 @@ void RecoverySystem::readyToLaunchRun()
   // If flying, stores data to memory and changes recovery system's state
   if ( isFlying ) {
 
-    // Storing data to memory
-    for (int i = 0; i < n; i++) memory.writeAltitude(altitude[i]);
+    // Setting barometer new baseline
+    barometer.setBaseline(altitude[0]);
+    /* 
+      Why resetting the barometer height baseline? If altimeter stays switched on for a long time, environment pressure
+      and temperature may change and, hence, change local baseline height. To avoid this problem, it is necessary to 
+      reset the barometer height baseline when liftoff is detected.
+    */
 
+    // Storing data to memory using the corrected altitude
+    for (int i = 0; i < n; i++) 
+    {
+      altitude[i] = altitude[i]-altitude[0];
+      
+      memory.writeAltitude(altitude[i]);
+    }
+    
     // Changing recovery system's state
     state = RecoverySystemState::flying;
 
