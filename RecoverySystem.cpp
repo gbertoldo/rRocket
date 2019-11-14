@@ -21,12 +21,6 @@ bool RecoverySystem::begin()
   // Show initialization message
   humanInterface.showInitMessage();
 
-  // Initializing altitude vector
-  for (int i = 0; i < n; i++)
-  {
-    altitude[i] = 0;
-  }
-
   // Initializing button
   button.begin(Parameters::pinButton);
 
@@ -37,6 +31,12 @@ bool RecoverySystem::begin()
   // Initializing EEPROM memory, barometer and actuator (these modules are critical, so their initialization must be checked)
   if ( memory.begin() && barometer.begin() && actuator.begin() )
   {
+
+    // Initializing altitude vector
+    for (int i = 0; i < n; i++)
+    {
+      altitude[i] = 0;
+    }
 
     switch (memory.getState())
     {
@@ -173,7 +173,7 @@ void RecoverySystem::flyingRun()
 
   if ( abs( altitude[n - 1] - barometer.getApogee() ) > Parameters::displacementForDrogueChuteDeployment ) isFalling = true;
 
-  // If rocket is falling down, activates drogue chute and changes recovery system's state
+  // If rocket is falling, activates drogue chute and changes recovery system's state
   if ( isFalling )
   {
 
@@ -265,8 +265,10 @@ void RecoverySystem::recoveredRun()
     case ButtonState::longPressed:
       // Erasing memory
       memory.erase();
-      // Changing recovery system's state
-      state = RecoverySystemState::readyToLaunch;
+      
+      // Restarting recovery system
+      begin();
+
       break;
 
     default:;
