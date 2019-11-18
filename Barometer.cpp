@@ -56,7 +56,7 @@ float Barometer::getApogee()
 void Barometer::setBaseline(float baseline)
 {
    
-   this->baseline = baseline;
+   this->baseline = this->baseline + baseline;
    
 }
 

@@ -13,7 +13,7 @@
 namespace Parameters
 {
 
-  const char*                      softwareVersion {"rRocket v.1.2"};
+  const char*                      softwareVersion {"rRocket v.1.3"};
   const int                                 pinLed {13};
   const int                              pinBuzzer {6};
   const int                              pinButton {10};
