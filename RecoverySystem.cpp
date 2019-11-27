@@ -182,6 +182,9 @@ void RecoverySystem::flyingRun()
 
     // Changing recovery system's state
     state = RecoverySystemState::drogueChuteActive;
+        
+    // Saving apogee
+    memory.writeApogee();
 
   }
 
@@ -208,9 +211,6 @@ void RecoverySystem::drogueChuteActiveRun()
 
     // Deploying parachute
     actuator.deployParachute();
-
-    // Saving apogee
-    memory.writeApogee();
 
     // Changing recovery system's state
     state = RecoverySystemState::parachuteActive;

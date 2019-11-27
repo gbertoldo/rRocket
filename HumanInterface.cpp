@@ -52,7 +52,7 @@ void HumanInterface::showReadyToLaunchStatus()
   if ( currentTime - timeOfTheLastMessage > 2000 )
   {
 
-    Serial.println("\n Recovery system is ready to launch!\n");
+    Serial.println("\n Recovery system is ready for launch!\n");
     timeOfTheLastMessage = currentTime;
     
   }
@@ -108,7 +108,7 @@ void HumanInterface::showRecoveredStatus()
     Serial.println("\n Recovery system is recovered!");
     Serial.print(  "   ");
     Serial.println(Parameters::softwareVersion);
-    Serial.println("   Option 1 - Press the button quickly to recovery data.");
+    Serial.println("   Option 1 - Press the button quickly to recover data.");
     Serial.println("   Option 2 - Press and hold by 3 seconds to erase memory.\n");
     timeOfTheLastMessage = currentTime;
     
