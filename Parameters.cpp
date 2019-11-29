@@ -13,14 +13,14 @@
 namespace Parameters
 {
 
-  const char*                      softwareVersion {"rRocket v.1.4"};
+  const char*                      softwareVersion {"rRocket v.1.4.1"};
   const int                                 pinLed {13};
   const int                              pinBuzzer {6};
   const int                              pinButton {10};
   const int                     pinButtonVCCSource {12};
   const int                         pinDrogueChute {3};
   const int                           pinParachute {5};
-  const float      displacementForLiftoffDetection {10};
+  const float      displacementForLiftoffDetection {30};
   const float displacementForDrogueChuteDeployment {5};
   const float          parachuteDeploymentAltitude {200};
   const float     displacementForRecoveryDetection {2.0};
