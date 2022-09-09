@@ -14,6 +14,8 @@
 
 bool RecoverySystem::begin()
 {
+  // Result of the initialization, true if success
+  bool result = true;
 
   // Initializing human interface
   humanInterface.begin();
@@ -28,19 +30,20 @@ bool RecoverySystem::begin()
   pinMode(Parameters::pinButtonVCCSource, OUTPUT);
   digitalWrite(Parameters::pinButtonVCCSource, HIGH);
 
-  // Initializing EEPROM memory, barometer and actuator (these modules are critical, so their initialization must be checked)
-  if ( memory.begin() && barometer.begin() && actuator.begin() )
+  // Initializing altitude vector
+  for (int i = 0; i < n; i++)
   {
+    altitude[i] = 0;
+  }
 
-    // Initializing altitude vector
-    for (int i = 0; i < n; i++)
-    {
-      altitude[i] = 0;
-    }
+  // Initializing the recovery system state
+  state = RecoverySystemState::readyToLaunch;
 
+  // Initializing EEPROM memory
+  if ( memory.begin() )
+  {
     switch (memory.getState())
     {
-
       case MemoryState::full:
         state = RecoverySystemState::recovered;
         break;
@@ -50,21 +53,30 @@ bool RecoverySystem::begin()
         break;
 
       default:
-        humanInterface.println(" Recovery system fatal error: unknown memory state. Stopping...\n");
-        while (true);
-
+        state = RecoverySystemState::readyToLaunch;
+        // TODO: register failure
+        break;
     }
-
   }
-  else
+
+  // Initializing the barometer (this module is critical, so its initialization must be garanteed)
+  while ( ! barometer.begin() )
   {
+    // TODO: register error
+    delay(500);
+    result = false;
+  }
+  
 
-    humanInterface.println(" Recovery system fatal error: unable to initialize recovery system...\n");
-
-    while (true) {};
-
+  // Initializing the actuator (this module is critical, so its initialization must be garanteed)
+  while ( ! actuator.begin() )
+  {
+    // TODO: register error
+    delay(500);
+    result = false;
   }
 
+  return result;
 };
 
 
