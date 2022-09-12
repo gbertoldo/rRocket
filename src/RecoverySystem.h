@@ -4,7 +4,7 @@
    /          rRocket: An Arduino powered rocketry recovery system          \
   /            Federal University of Technology - Parana - Brazil            \
   \              by Guilherme Bertoldo and Jonas Joacir Radtke               /
-   \                       updated October 18, 2019                         /
+   \                       updated September 12, 2022                       /
     \**********************************************************************/
 
 
@@ -68,7 +68,7 @@ class RecoverySystem
   public:
 
     //  Recovery initializer
-    bool begin();
+    void begin();
 
     // Reads sensors and execute recovery algorithm
     void run();
@@ -86,6 +86,15 @@ class RecoverySystem
     // Updates altitude vector
     void registerAltitude(bool writeToMemory);
 
+    /* 
+      Checks the flying condition. Used both to detect liftoff as well as 
+      to detect falling in the 'recovered' state.
+    */ 
+    bool isFlying();
+
+    // Changes the recovery system state to 'flying'.
+    void changeStateToFlying(); 
+
   private:
 
     RecoverySystemState               state; // Current state of recovery system
@@ -96,7 +105,7 @@ class RecoverySystem
     Actuator                       actuator; // Actuator for deployment of drogue and parachute
 
     static constexpr unsigned long int timeStep  {250}; // Time step for registering altitude (ms)
-    int                                       n   {8};  // Size of 'altitude' vector
+    uint8_t                                   n   {8};  // Size of 'altitude' vector
     float                           altitude[8];        // Initial altitudes
 
 };

@@ -4,227 +4,134 @@
    /          rRocket: An Arduino powered rocketry recovery system          \
   /            Federal University of Technology - Parana - Brazil            \
   \              by Guilherme Bertoldo and Jonas Joacir Radtke               /
-   \                       updated October 18, 2019                         /
+   \                       updated September 12, 2022                       /
     \**********************************************************************/
 
 
 #include "Arduino.h"
 #include "Memory.h"
-#include <EEPROM.h>
-
+#include "ErrorTable.h"
 
 bool Memory::begin()
 {
+  // Number of available slots to save altitudes during flight
+  // The first slots is reserved for the apogee.
+  numberOfSlots = (uint16_t)(((float)getMemorySize()-addrAltitudesBegin)/2.0) - 1;
 
-  restartPosition(); // initial position to read or write the height
-  apogee = readApogee(); // initial value to apogee
-  memorySize = EEPROM.length(); // EEPROM size of the Arduino (bytes)
-
-  if (apogee > 0)
+  // Reading from memory the number of altitude registers
+  numberOfSlotsWritten = 0;
+  for ( uint16_t i = 1; i <= numberOfSlots; ++i)
   {
-    setState(MemoryState::full);
+    uint16_t iAltitude, address;
+
+    address = 2*i+addrAltitudesBegin;
+
+    EEPROM.get(address, iAltitude);
+
+    if ( iAltitude == 0 ) 
+    {
+      break;
+    }
+    else
+    {
+      numberOfSlotsWritten++;
+    }
+  }
+  return true;
+}
+
+float Memory::readAltitude(const uint16_t& i)
+{
+  // If the position is out of range, returns 0
+  if ( i > numberOfSlots ) return 0.0;
+
+  // The altitude is written as unsigned integers of 16 bits.
+  // It must be converted to float.
+  uint16_t iAltitude;
+  float    fAltitude;
+
+  // Calculating the address in memory of slot i
+  uint16_t address = 2 * i + addrAltitudesBegin;
+
+  // Reading the altitude (decimeters)
+  EEPROM.get(address, iAltitude);
+
+  // Converts the altitude from decimeter to meter and removes the 500 m added
+  // when the altitude was saved. 
+  fAltitude = ((float)iAltitude)/10.0-500.0;
+
+  return fAltitude;
+}
+
+bool Memory::writeAltitude(const uint16_t& i, float fAltitude)
+{
+  // If the position is out of range, returns 0
+  if ( i > numberOfSlots ) return false;
+
+  fAltitude = fAltitude + 500.0; // increase 500 meters to write positive altitudes
+
+  // Checking if the altitude is still negative
+  if (fAltitude < 0) 
+  {
+    fAltitude = -fAltitude;
+
+    // Registering altitude negative overflow error in the log
+    writeErrorLog(error::AltitudeNegativeOverflow);
+  }
+
+  // Converting meters to decimeters
+  fAltitude = 10.0 * fAltitude; 
+
+  // Integer part of fAltitude
+  uint16_t iAltitude;
+
+  /* 
+    Checking the upper limit of the altitude 
+    (it must not exceed the limit of uint16_t = 65536)
+  */
+  if (fAltitude > 65000.0) 
+  {
+    // Calculating the mod of fAltitude/65000 and converting it to uint16_t.
+    iAltitude = (uint16_t)(fAltitude-65000.0*(int)(fAltitude/65000.0)); // Altitude limit
+
+    // Registering altitude negative overflow error in the log
+    writeErrorLog(error::AltitudePositiveOverflow);
   }
   else
   {
-    setState(MemoryState::empty);
+    iAltitude = (uint16_t)fAltitude;
   }
+  
+  // Calculating the address in memory of slot i
+  uint16_t address = 2 * i + addrAltitudesBegin;
+
+  // Saving to EEPROM
+  EEPROM.put(address, iAltitude);
 
   return true;
-
 }
 
-
-void Memory::setState(MemoryState currentState)
+bool Memory::appendAltitude(float altitude)
 {
-
-  state = currentState;
-
-}
-
-
-int Memory::getSize()
-{
-
-  return memorySize;
-
-}
-
-
-MemoryState Memory::getState()
-{
-
-  return state;
-
-}
-
-
-float Memory::readAltitude()
-{
-
-  float fHeight;
-  unsigned int iHeight;
-  int quotient;
-  int rest;
-
-  quotient = EEPROM.read(position);
-  rest = EEPROM.read(position + 1);
-  position = position + 2;
-
-  iHeight = (255 * quotient + rest);
-  fHeight = (float)iHeight;
-  fHeight = fHeight / 10;   // transform the measures of decimeters to meters
-  fHeight = fHeight - 500;
-
-  return fHeight;
-
-}
-
-
-bool Memory::writeAltitude(float fHeight)
-{
-
-  unsigned int iHeight;
-  int quotient;
-  int rest;
-
-  if (getState() == MemoryState::full) return 1;
-
-  if (position > memorySize - 2)
+  if ( numberOfSlotsWritten < numberOfSlots )
   {
-    setState(MemoryState::full);
-    return 1; // memory full
+    if ( writeAltitude(numberOfSlotsWritten+1, altitude) )
+    {
+      numberOfSlotsWritten++;
+      return true;
+    }
+    else
+    {
+      return false;
+    }
   }
-
-  if (fHeight > apogee) apogee = fHeight;
-
-  fHeight = fHeight + 500; // increase 500 meters to write positive heights
-
-  if (fHeight < 0) fHeight = 0;
-
-  if (fHeight > 6500) fHeight = 6500; // height limit
-
-  fHeight = 10 * fHeight; // transform the measures of meters to decimeters
-  iHeight = (int)fHeight;
-  quotient = iHeight / 255;
-  rest = iHeight % 255;
-
-  EEPROM.write(position, quotient);
-  EEPROM.write(position + 1, rest);
-
-  position = position + 2;
-
-  return 0;
-
-}
-
-
-bool Memory::writeApogee()
-{
-  bool result = true;
-  float fHeight;
-  unsigned int iHeight;
-  int quotient;
-  int rest;
-
-  fHeight = apogee;
-
-  if (fHeight > 6500) 
+  else
   {
-    fHeight = 6500; // height limit
-    result = false;
+    return false;
   }
-  fHeight = 10 * fHeight; // transform the measures of meters to decimeters
-  iHeight = (int)fHeight;
-  quotient = iHeight / 255;
-  rest = iHeight % 255;
-
-  EEPROM.write(0, quotient);
-  EEPROM.write(1, rest);
-
-  return result;
 }
-
-
-float Memory::readApogee()
-{
-
-  float fHeight;
-  unsigned int iHeight;
-  int quotient;
-  int rest;
-
-  quotient = EEPROM.read(0);
-  rest = EEPROM.read(1);
-
-  iHeight = (255 * quotient + rest);
-  fHeight = (float)iHeight;
-  fHeight = fHeight / 10; // transform the measures of decimeters to meters
-
-  return fHeight;
-
-}
-
 
 void Memory::erase()
 {
-
-  unsigned int i;
-
-  apogee = 0;
-  writeApogee();
-
-  restartPosition();
-
-  for (i = 0; i < memorySize; i++) EEPROM.write(i, 0);
-
-  restartPosition();
-
-  setState(MemoryState::empty);
-
-};
-
-
-void Memory::restartPosition()
-{
-
-  position = 2;
-
-}
-
-
-bool Memory::hasNext()
-{
-
-  // First check for end of memory
-  if (position > memorySize - 2)
-  {
-
-    return false;
-
-  }
-  else // Otherwise, checks if there is a valid altitude
-  {
-
-    byte quotient;
-    byte rest;
-
-    quotient = EEPROM.read(position);
-    rest = EEPROM.read(position + 1);
-
-    // If current read is not a valid altitude, return false
-    if ( quotient == 0 && rest == 0 )
-    {
-
-      return false;
-
-    }
-    else // Otherwise, return true
-    {
-
-      return true;
-
-    }
-
-  }
-
+  for (uint16_t i = 0; i < EEPROM.length(); i++) EEPROM.write(i, 0);
 };

@@ -4,12 +4,13 @@
    /          rRocket: An Arduino powered rocketry recovery system          \
   /            Federal University of Technology - Parana - Brazil            \
   \              by Guilherme Bertoldo and Jonas Joacir Radtke               /
-   \                       updated October 18, 2019                         /
+   \                       updated September 12, 2022                       /
     \**********************************************************************/
 
 
 #include "HumanInterface.h"
 #include "Parameters.h"
+#include "ErrorTable.h"
 
 
 void HumanInterface::begin()
@@ -150,40 +151,37 @@ void HumanInterface::blinkApogee(Memory& memory)
 }
 
 
-void HumanInterface::showApogee(Memory& memory)
+void HumanInterface::showReport(unsigned long int iTimeStep, Memory& memory)
 {
 
-  Serial.println("");
-  Serial.print("Apogee (m) = ");
+  Serial.print("\nApogee (m) = ");
   Serial.println(memory.readApogee());
+  Serial.print("\nError code = ");
+  uint16_t errorLog = memory.readErrorLog();
+  for (uint8_t i = 0; i < 16; ++i)
+  {
+    /* 
+      If the error is in the log, print it. See the error encode in the ErrorTable.h file.
+    */
+    if ( (errorLog & 2) == 2 )
+    {
+      Serial.print(i);
+      Serial.print("; ");
+    }
+    errorLog = errorLog >> 1;
+  }
   Serial.println("");
 
-}
-
-
-void HumanInterface::showTrajectory(unsigned long int iTimeStep, Memory& memory)
-{
-
-  float fTimeStep;
-
-  fTimeStep = (float)iTimeStep;
-  fTimeStep = fTimeStep / 1000;
-
-  memory.restartPosition();
-
+  float fTimeStep = ((float)iTimeStep)/1000.0;
+  
   Serial.println("Time (s); Altitude (m)");
 
-  int i = 0;
-  while ( memory.hasNext() )
+  for ( uint16_t i = 1; i <= memory.getNumberOfSlotsWritten(); ++i)
   {
-    Serial.print(i * fTimeStep);
+    Serial.print((i-1) * fTimeStep);
     Serial.print("; ");
-    Serial.println(memory.readAltitude());
-    ++i;
+    Serial.println(memory.readAltitude(i));
   }
-
-  memory.restartPosition();
-
 }
 
 

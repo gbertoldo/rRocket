@@ -4,19 +4,17 @@
    /          rRocket: An Arduino powered rocketry recovery system          \
   /            Federal University of Technology - Parana - Brazil            \
   \              by Guilherme Bertoldo and Jonas Joacir Radtke               /
-   \                       updated October 18, 2019                         /
+   \                       updated September 12, 2022                       /
     \**********************************************************************/
 
 
 #include "RecoverySystem.h"
 #include "Parameters.h"
+#include "ErrorTable.h"
 
 
-bool RecoverySystem::begin()
+void RecoverySystem::begin()
 {
-  // Result of the initialization, true if success
-  bool result = true;
-
   // Initializing human interface
   humanInterface.begin();
 
@@ -30,54 +28,54 @@ bool RecoverySystem::begin()
   pinMode(Parameters::pinButtonVCCSource, OUTPUT);
   digitalWrite(Parameters::pinButtonVCCSource, HIGH);
 
-  // Initializing altitude vector
-  for (int i = 0; i < n; i++)
-  {
-    altitude[i] = 0;
-  }
-
-  // Initializing the recovery system state
-  state = RecoverySystemState::readyToLaunch;
-
   // Initializing EEPROM memory
-  if ( memory.begin() )
-  {
-    switch (memory.getState())
-    {
-      case MemoryState::full:
-        state = RecoverySystemState::recovered;
-        break;
-
-      case MemoryState::empty:
-        state = RecoverySystemState::readyToLaunch;
-        break;
-
-      default:
-        state = RecoverySystemState::readyToLaunch;
-        // TODO: register failure
-        break;
-    }
-  }
+  memory.begin();  
 
   // Initializing the barometer (this module is critical, so its initialization must be garanteed)
   while ( ! barometer.begin() )
   {
-    // TODO: register error
-    delay(500);
-    result = false;
+    // Registering error
+    memory.writeErrorLog(error::BarometerInitializationFailure);
+    delay(100);
   }
-  
 
   // Initializing the actuator (this module is critical, so its initialization must be garanteed)
   while ( ! actuator.begin() )
   {
-    // TODO: register error
-    delay(500);
-    result = false;
+    // Registering error
+    memory.writeErrorLog(error::ActuatorInitializationFailure);
+    delay(100);
   }
 
-  return result;
-};
+  // Initializing the altitude vector
+  for ( uint8_t i = 0; i < n; ++i)
+  {
+    altitude[i] = 0.0;
+  }
+  for ( uint8_t i = 0; i < n; ++i)
+  {
+    // Read the altitude, but do not write it to the memory
+    registerAltitude(false);
+    delay(timeStep+5);
+  }
+
+  /*
+    Choose the initial state according to the data in memory.
+    If memory is empty, the initial state is readyToLaunch. 
+    Otherwise, the initial state is recovered. If the altimeter
+    is reset during the flight, it will be initialized in
+    the recovered state and soon its state will be changed
+    to flying, due to the fullfilment of the flying condition.
+  */
+  if ( memory.getNumberOfSlotsWritten() > 0 )
+  {
+    state = RecoverySystemState::recovered;
+  }
+  else
+  {
+    state = RecoverySystemState::readyToLaunch;
+  }
+}
 
 
 void RecoverySystem::run()
@@ -126,48 +124,16 @@ void RecoverySystem::readyToLaunchRun()
            Scanning for liftoff
 
   */
-
-  bool isFlying = false;
-
-  if ( abs(altitude[n - 1] - altitude[0]) > Parameters::displacementForLiftoffDetection) isFlying = true;
-  /*
-      Why using absolute value for altitude variation? Suppose the recovery system suffers a failure during flight,
-      turn off and turn on again. If it is falling, altitude variation will be negative and the above conditional
-      will be fulfilled. Recovery system will change state to 'flying' and soon to 'drogrueChuteActive' or
-      'parachuteActive'.
-  */
-
+  
   // If flying, stores data to memory and changes recovery system's state
-  if ( isFlying ) {
-
-    // Setting barometer new baseline
-    barometer.setBaseline(altitude[0]);
-    /* 
-      Why resetting the barometer height baseline? If altimeter stays switched on for a long time, environment pressure
-      and temperature may change and, hence, change local baseline height. To avoid this problem, it is necessary to 
-      reset the barometer height baseline when liftoff is detected.
-    */
-
-    // Storing data to memory using the corrected altitude
-    for (int i = 0; i < n; i++) 
-    {
-      altitude[i] = altitude[i]-altitude[0];
-      
-      memory.writeAltitude(altitude[i]);
-    }
-    
-    // Changing recovery system's state
-    state = RecoverySystemState::flying;
-
+  if ( isFlying() ) {
+    changeStateToFlying();    
   }
   else
   {
-
     // Showing recovery system is ready to launch
     humanInterface.showReadyToLaunchStatus();
-
   }
-
 }
 
 
@@ -196,7 +162,7 @@ void RecoverySystem::flyingRun()
     state = RecoverySystemState::drogueChuteActive;
         
     // Saving apogee
-    memory.writeApogee();
+    memory.writeApogee( barometer.getApogee() );
 
   }
 
@@ -261,6 +227,22 @@ void RecoverySystem::parachuteActiveRun()
 void RecoverySystem::recoveredRun()
 {
 
+  // Registering altitude without writing to memory
+  registerAltitude(false);
+ 
+  // If flying, stores data to memory and changes recovery system's state.
+  // This condition should not occur in a regular flight. But, if the altimeter resets
+  // during the flight, and there is some data stored, the initial state will be 'recovered'.
+  // To give the altimeter a chance to open the parachute, the flying condition is monitored.
+  // If the condition is fullfiled, the state changes to 'flying'.
+  if ( isFlying() ) {
+    // Saving the exception
+    memory.writeErrorLog(error::RestartedDuringFlight);
+    
+    // Changing state
+    changeStateToFlying();    
+  }
+
   // Shows to user the recovered status
   humanInterface.showRecoveredStatus();
 
@@ -270,8 +252,7 @@ void RecoverySystem::recoveredRun()
 
     case ButtonState::pressedAndReleased:
       humanInterface.blinkApogee(memory);
-      humanInterface.showApogee(memory);
-      humanInterface.showTrajectory(timeStep, memory);
+      humanInterface.showReport(timeStep, memory);
       break;
 
     case ButtonState::longPressed:
@@ -306,7 +287,40 @@ void RecoverySystem::registerAltitude(bool writeToMemory)
 
     altitude[n - 1] = barometer.getAltitude();
 
-    if (writeToMemory) memory.writeAltitude(altitude[n - 1]);
+    if (writeToMemory) memory.appendAltitude(altitude[n - 1]);
   }
 
 };
+
+bool RecoverySystem::isFlying()
+{
+  /*
+      Why using absolute value for altitude variation? Suppose the recovery system suffers a failure during flight,
+      turn off and turn on again. If it is falling, altitude variation will be negative and the above conditional
+      will be fulfilled. Recovery system will change state to 'flying' and soon to 'drogrueChuteActive' or
+      'parachuteActive'.
+  */
+  return ( abs(altitude[n - 1] - altitude[0]) > Parameters::displacementForLiftoffDetection);
+}
+
+void RecoverySystem::changeStateToFlying()
+{
+    // Setting barometer new baseline
+    barometer.setBaseline(altitude[0]);
+    /* 
+      Why resetting the barometer height baseline? If altimeter stays switched on for a long time, environment pressure
+      and temperature may change and, hence, change local baseline height. To avoid this problem, it is necessary to 
+      reset the barometer height baseline when liftoff is detected.
+    */
+
+    // Storing data to memory using the corrected altitude
+    for (int i = 0; i < n; i++) 
+    {
+      altitude[i] = altitude[i]-altitude[0];
+      
+      memory.appendAltitude(altitude[i]);
+    }
+    
+    // Changing recovery system's state
+    state = RecoverySystemState::flying;
+}

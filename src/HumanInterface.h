@@ -4,7 +4,7 @@
    /          rRocket: An Arduino powered rocketry recovery system          \
   /            Federal University of Technology - Parana - Brazil            \
   \              by Guilherme Bertoldo and Jonas Joacir Radtke               /
-   \                       updated October 18, 2019                         /
+   \                       updated September 12, 2022                       /
     \**********************************************************************/
 
 
@@ -43,11 +43,8 @@ class HumanInterface
     // Blinks apogee
     void blinkApogee(Memory& memory);
 
-    // Shows apogee
-    void showApogee(Memory& memory);
-
-    // Shows trajectory
-    void showTrajectory(unsigned long int iTimeStep, Memory& memory);
+    // Shows the report of apogee, trajectory, errors, etc
+    void showReport(unsigned long int iTimeStep, Memory& memory);
 
     // Prints on screen
     template <typename T>

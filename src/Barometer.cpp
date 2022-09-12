@@ -4,7 +4,7 @@
    /          rRocket: An Arduino powered rocketry recovery system          \
   /            Federal University of Technology - Parana - Brazil            \
   \              by Guilherme Bertoldo and Jonas Joacir Radtke               /
-   \                       updated October 18, 2019                         /
+   \                       updated September 12, 2022                       /
     \**********************************************************************/
 
 
@@ -27,6 +27,8 @@ bool Barometer::begin()
   if (!barometer.begin(barometerAddress)) return false;
 
   baseline = barometer.readAltitude(1013.25);
+
+  apogee = -500.0;
 
   return true;
 
