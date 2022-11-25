@@ -24,10 +24,6 @@ void RecoverySystem::begin()
   // Initializing button
   button.begin(Parameters::pinButton);
 
-  // Pin used in the button as 5V
-  pinMode(Parameters::pinButtonVCCSource, OUTPUT);
-  digitalWrite(Parameters::pinButtonVCCSource, HIGH);
-
   // Initializing EEPROM memory
   memory.begin();  
 

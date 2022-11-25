@@ -13,13 +13,12 @@
 
 namespace Parameters
 {
-  static constexpr char       softwareVersion[] {"rRocket v.1.4.3"}; // Version of this software
+  static constexpr char       softwareVersion[] {"rRocket v.1.4.4"}; // Version of this software
   static constexpr int                                 pinLed  {13}; // Screen uses pin 13 to blink Arduino internal led
-  static constexpr int                              pinBuzzer   {6}; // Pin of buzzer
+  static constexpr int                              pinBuzzer  {11}; // Pin of buzzer
   static constexpr int                              pinButton  {10}; // Pin of button
-  static constexpr int                     pinButtonVCCSource  {12}; // Pin used in the button as 5V
-  static constexpr int                         pinDrogueChute   {3}; // Pin to trigger the auxiliary recovery system (at apogee-displacementForRecoveryDetection)
-  static constexpr int                           pinParachute   {5}; // Pin to trigger the main recovery system (at parachuteDeploymentAltitude)
+  static constexpr int                         pinDrogueChute  {12}; // Pin to trigger the auxiliary recovery system (at apogee-displacementForRecoveryDetection)
+  static constexpr int                           pinParachute   {3}; // Pin to trigger the main recovery system (at parachuteDeploymentAltitude)
   static constexpr float      displacementForLiftoffDetection  {30}; // Displacement from the ground for liftoff detection (meter)
   static constexpr float displacementForDrogueChuteDeployment   {5}; // Displacement from apogee for activation of drogue chute (meter)
   static constexpr float          parachuteDeploymentAltitude {200}; // Altitude to deploy main parachute (meter)
