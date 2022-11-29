@@ -134,4 +134,5 @@ bool Memory::appendAltitude(float altitude)
 void Memory::erase()
 {
   for (uint16_t i = 0; i < EEPROM.length(); i++) EEPROM.write(i, 0);
+  numberOfSlotsWritten = 0;
 };
