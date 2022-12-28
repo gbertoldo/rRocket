@@ -27,6 +27,23 @@ void RecoverySystem::begin()
   // Initializing EEPROM memory
   memory.begin();  
 
+  /*
+    Choose the initial state according to the data in memory.
+    If memory is empty, the initial state is readyToLaunch. 
+    Otherwise, the initial state is recovered. If the altimeter
+    is reset during the flight, it will be initialized in
+    the recovered state and soon its state will be changed
+    to flying, due to the fullfilment of the flying condition.
+  */
+  if ( memory.getNumberOfSlotsWritten() > 0 )
+  {
+    state = RecoverySystemState::recovered;
+  }
+  else
+  {
+    state = RecoverySystemState::readyToLaunch;
+  }
+
   // Initializing the barometer (this module is critical, so its initialization must be garanteed)
   while ( ! barometer.begin() )
   {
@@ -48,28 +65,12 @@ void RecoverySystem::begin()
   {
     altitude[i] = 0.0;
   }
-  for ( uint8_t i = 0; i <= N; ++i)
+  uint32_t t0 = millis();
+  // Giving the registerAltitude method enough time to fully populate the altitude[] vector
+  while ( millis()-t0 < deltaT * (N+3) )
   {
     // Read the altitude, but do not write it to the memory
     registerAltitude(false);
-    delay(deltaT+5);
-  }
-
-  /*
-    Choose the initial state according to the data in memory.
-    If memory is empty, the initial state is readyToLaunch. 
-    Otherwise, the initial state is recovered. If the altimeter
-    is reset during the flight, it will be initialized in
-    the recovered state and soon its state will be changed
-    to flying, due to the fullfilment of the flying condition.
-  */
-  if ( memory.getNumberOfSlotsWritten() > 0 )
-  {
-    state = RecoverySystemState::recovered;
-  }
-  else
-  {
-    state = RecoverySystemState::readyToLaunch;
   }
 }
 
