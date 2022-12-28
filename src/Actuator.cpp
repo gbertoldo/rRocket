@@ -4,7 +4,7 @@
    /          rRocket: An Arduino powered rocketry recovery system          \
   /            Federal University of Technology - Parana - Brazil            \
   \              by Guilherme Bertoldo and Jonas Joacir Radtke               /
-   \                       updated October 18, 2019                         /
+   \                       updated December 19, 2022                        /
     \**********************************************************************/
 
 
@@ -17,55 +17,62 @@ bool Actuator::begin()
 
   pinMode(Parameters::pinDrogueChute, OUTPUT);
 
-  digitalWrite(Parameters::pinDrogueChute, LOW);
-
   pinMode(Parameters::pinParachute, OUTPUT);
 
-  digitalWrite(Parameters::pinParachute, LOW);
+  reload();
 
   return true;
 
 }
 
+void Actuator::reload()
+{
+  digitalWrite(Parameters::pinDrogueChute, LOW);
+
+  digitalWrite(Parameters::pinParachute, LOW);
+
+  timeParachuteWasActivated = 0;
+
+  timeDrogueChuteWasActivated = 0;
+
+  parachuteDeployCounter = 0;
+
+  drogueDeployCounter = 0;
+}
 
 void Actuator::deployParachute()
 {
-
-  if (timeParachuteWasActivated == 0) timeParachuteWasActivated = millis();
-  
-  if ( abs(millis() - timeParachuteWasActivated) < Parameters::timeParachuteActive)
+  // If not deployed yet, deploy it
+  if ( parachuteDeployCounter == 0 )
   {
-    
     digitalWrite(Parameters::pinParachute, HIGH);
-  
+    timeParachuteWasActivated = millis();
+    parachuteDeployCounter++;
   }
   else
   {
-  
-    digitalWrite(Parameters::pinDrogueChute, LOW);
-    digitalWrite(Parameters::pinParachute, LOW);
-  
+    if ( abs(millis() - timeParachuteWasActivated) > Parameters::timeParachuteActive )
+    {
+      digitalWrite(Parameters::pinParachute, LOW);
+    }
   }
-
 }
 
 
 void Actuator::deployDrogueChute()
 {
-
-  if (timeDrogueChuteWasActivated == 0) timeDrogueChuteWasActivated = millis();
-  
-  if ( abs(millis() - timeDrogueChuteWasActivated) < Parameters::timeDrogueChuteActive)
+  // If not deployed yet, deploy it
+  if ( drogueDeployCounter == 0 )
   {
-    
     digitalWrite(Parameters::pinDrogueChute, HIGH);
-  
+    timeDrogueChuteWasActivated = millis();
+    drogueDeployCounter++;
   }
   else
   {
-  
-    digitalWrite(Parameters::pinDrogueChute, LOW);
-
+    if ( abs(millis() - timeDrogueChuteWasActivated) > Parameters::timeDrogueChuteActive )
+    {
+      digitalWrite(Parameters::pinDrogueChute, LOW);
+    }
   }
-
 };

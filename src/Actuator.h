@@ -10,6 +10,7 @@
 
 #ifndef ACTUATOR_H
 #define ACTUATOR_H
+#include <inttypes.h>
 
 /*
 
@@ -27,6 +28,9 @@ class Actuator
     // Initializes Actuator object
     bool begin();
 
+    // Resets the Actuator
+    void reload();
+
     // Deploys main parachute
     void deployParachute();
 
@@ -35,6 +39,8 @@ class Actuator
 
   private:
 
+    uint8_t drogueDeployCounter {0};
+    uint8_t parachuteDeployCounter {0};
     unsigned long int timeDrogueChuteWasActivated {0};  // time in that drogue chute was activated
     unsigned long int timeParachuteWasActivated   {0};  // time in that parachute was activated
 

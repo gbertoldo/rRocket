@@ -44,15 +44,15 @@ void RecoverySystem::begin()
   }
 
   // Initializing the altitude vector
-  for ( uint8_t i = 0; i < n; ++i)
+  for ( uint8_t i = 0; i <= N; ++i)
   {
     altitude[i] = 0.0;
   }
-  for ( uint8_t i = 0; i < n; ++i)
+  for ( uint8_t i = 0; i <= N; ++i)
   {
     // Read the altitude, but do not write it to the memory
     registerAltitude(false);
-    delay(timeStep+5);
+    delay(deltaT+5);
   }
 
   /*
@@ -122,7 +122,7 @@ void RecoverySystem::readyToLaunchRun()
   */
   
   // If flying, stores data to memory and changes recovery system's state
-  if ( isFlying() ) {
+  if ( liftoffCondition + fallCondition > 0 ) {
     changeStateToFlying();    
   }
   else
@@ -142,14 +142,11 @@ void RecoverySystem::flyingRun()
   // Shows to user the flying status
   humanInterface.showFlyingStatus();
 
-  // Checks for falling state
-  bool isFalling = false;
-
-  if ( abs( altitude[n - 1] - barometer.getApogee() ) > Parameters::displacementForDrogueChuteDeployment ) isFalling = true;
-
   // If rocket is falling, activates drogue chute and changes recovery system's state
-  if ( isFalling )
+  if ( apogeeCondition + fallCondition > 0 )
   {
+    // Preparing actuator for drogue and parachute deployment
+    actuator.reload();
 
     // Deploying drogue chute
     actuator.deployDrogueChute();
@@ -174,13 +171,8 @@ void RecoverySystem::drogueChuteActiveRun()
   // Deploying drogue chute
   actuator.deployDrogueChute();
 
-  // Checks for main parachute activation
-  bool parachuteActivation = false;
-
-  if ( altitude[n - 1] <= Parameters::parachuteDeploymentAltitude ) parachuteActivation = true;
-
   // If rocket is falling bellow parachute activation altitude, activates parachute and changes recovery system's state
-  if ( parachuteActivation )
+  if ( parachuteDeploymentCondition > 0 )
   {
 
     // Deploying parachute
@@ -200,16 +192,12 @@ void RecoverySystem::parachuteActiveRun()
   // Registers altitude and writes to memory
   registerAltitude(true);
 
-  // Deploying parachute
+  // Deploying parachute and drogue (if not yet)
+  actuator.deployDrogueChute();
   actuator.deployParachute();
 
-  // Checks for recovery
-  bool isRecovered = false;
-
-  if ( abs( altitude[n - 1] - altitude[0] ) < Parameters::displacementForRecoveryDetection ) isRecovered = true;
-
   // If rocket is recovered, changes recovery system's state
-  if ( isRecovered )
+  if ( landingCondition > 0 )
   {
 
     // Changing recovery system's state
@@ -231,39 +219,41 @@ void RecoverySystem::recoveredRun()
   // during the flight, and there is some data stored, the initial state will be 'recovered'.
   // To give the altimeter a chance to open the parachute, the flying condition is monitored.
   // If the condition is fullfiled, the state changes to 'flying'.
-  if ( isFlying() ) {
+  if ( liftoffCondition + fallCondition > 0 ) {
     // Saving the exception
     memory.writeErrorLog(error::RestartedDuringFlight);
     
     // Changing state
-    changeStateToFlying();    
+    changeStateToFlying();  
+  
   }
-
-  // Shows to user the recovered status
-  humanInterface.showRecoveredStatus();
-
-  // Reading button
-  switch (button.getState())
+  else
   {
+    // Shows to user the recovered status
+    humanInterface.showRecoveredStatus();
 
-    case ButtonState::pressedAndReleased:
-      humanInterface.blinkApogee(memory);
-      humanInterface.showReport(timeStep, memory);
-      break;
+    // Reading button
+    switch (button.getState())
+    {
 
-    case ButtonState::longPressed:
-      // Erasing memory
-      memory.erase();
-      
-      // Restarting recovery system
-      begin();
+      case ButtonState::pressedAndReleased:
+        humanInterface.blinkApogee(memory);
+        humanInterface.showReport(deltaT, memory);
+        break;
 
-      break;
+      case ButtonState::longPressed:
+        // Erasing memory
+        memory.erase();
+        
+        // Restarting recovery system
+        begin();
 
-    default:;
+        break;
 
-  };
+      default:;
 
+    };
+  }
 }
 
 
@@ -272,32 +262,24 @@ void RecoverySystem::registerAltitude(bool writeToMemory)
 
   static unsigned long int currentStep = 0;
 
-  if (millis() / timeStep > currentStep)
+  if (millis() / deltaT > currentStep)
   {
     currentStep = currentStep + 1;
 
-    for (int i = 0; i < n - 1; i++)
+    for (int i = 0; i < N; i++)
     {
       altitude[i] = altitude[i + 1];
     }
 
-    altitude[n - 1] = barometer.getAltitude();
+    altitude[N] = barometer.getAltitude();
 
-    if (writeToMemory) memory.appendAltitude(altitude[n - 1]);
+    if (writeToMemory) memory.appendAltitude(altitude[N]);
+
+    checkFlyEvents();
   }
 
 };
 
-bool RecoverySystem::isFlying()
-{
-  /*
-      Why using absolute value for altitude variation? Suppose the recovery system suffers a failure during flight,
-      turn off and turn on again. If it is falling, altitude variation will be negative and the above conditional
-      will be fulfilled. Recovery system will change state to 'flying' and soon to 'drogrueChuteActive' or
-      'parachuteActive'.
-  */
-  return ( abs(altitude[n - 1] - altitude[0]) > Parameters::displacementForLiftoffDetection);
-}
 
 void RecoverySystem::changeStateToFlying()
 {
@@ -310,9 +292,11 @@ void RecoverySystem::changeStateToFlying()
     */
 
     // Storing data to memory using the corrected altitude
-    for (int i = 0; i < n; i++) 
+    float newBaseline = altitude[0];
+
+    for (int i = 0; i <= N; i++) 
     {
-      altitude[i] = altitude[i]-altitude[0];
+      altitude[i] = altitude[i]-newBaseline;
       
       memory.appendAltitude(altitude[i]);
     }
@@ -320,3 +304,59 @@ void RecoverySystem::changeStateToFlying()
     // Changing recovery system's state
     state = RecoverySystemState::flying;
 }
+
+
+float RecoverySystem::vAverage()
+{
+    /*
+    // Simple mean
+
+    float sum1 = 0.0;
+    float sum2 = 0.0;
+
+    for (uint8_t i = 0; i < halfN; ++i)
+    {
+        sum1 += altitude[i];
+        sum2 += altitude[N-i];
+    }
+    return (sum2-sum1)/(1E-3*(halfN+1)*halfN*deltaT);
+    */
+    // Integral based average
+    float sum1 = 0.5*altitude[0];
+    float sum2 = 0.5*altitude[N];
+
+    for (uint8_t i = 1; i < halfN; ++i)
+    {
+        sum1 += altitude[i];
+        sum2 += altitude[N-i];
+    }
+    return (sum2-sum1)/(1E-3*halfN*halfN*deltaT);
+};
+
+
+void RecoverySystem::checkFlyEvents()
+{
+    // Calculating the average vertical component of the velocity
+    float vavg = vAverage();
+
+    // Ckecking the lift off condition
+    liftoffCondition = (  vavg > Parameters::speedForLiftoffDetection ? 1 : 0 );
+    
+    // Checking the fall condition
+    fallCondition    = ( -vavg > Parameters::speedForFallDetection ? 1 : 0 );
+    
+    // Checking the apogee condition 
+    apogeeCondition  = (  vavg < Parameters::speedForApogeeDetection ? 1 : 0 );
+    
+    // Checking the parachute deployment condition
+    parachuteDeploymentCondition = ( altitude[N] <= Parameters::parachuteDeploymentAltitude ? 1 : 0 );
+
+    // Checking the landing condition
+    float ymin=1E5, ymax=-1E5;
+    for (uint8_t i = 0; i < N+1; ++i)
+    {
+        if ( altitude[i] < ymin ) ymin = altitude[i];
+        if ( altitude[i] > ymax ) ymax = altitude[i];
+    }
+    landingCondition = ( ymax-ymin < Parameters::displacementForLandingDetection ? 1 : 0 );
+};

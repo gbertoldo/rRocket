@@ -86,14 +86,26 @@ class RecoverySystem
     // Updates altitude vector
     void registerAltitude(bool writeToMemory);
 
-    /* 
-      Checks the flying condition. Used both to detect liftoff as well as 
-      to detect falling in the 'recovered' state.
-    */ 
-    bool isFlying();
 
     // Changes the recovery system state to 'flying'.
     void changeStateToFlying(); 
+
+    /*
+      Calculates the vertical component of the velocity
+      vector based on average values of the vertical 
+      position.
+    */
+    float vAverage();
+
+    /*
+      Checks for the conditions of the following events:
+        - liftoff 
+        - apogee 
+        - fall 
+        - parachute deployment altitude 
+        - landing 
+    */
+    void checkFlyEvents();
 
   private:
 
@@ -104,9 +116,17 @@ class RecoverySystem
     HumanInterface           humanInterface; // Interface for communication with humans
     Actuator                       actuator; // Actuator for deployment of drogue and parachute
 
-    static constexpr unsigned long int timeStep  {250}; // Time step for registering altitude (ms)
-    uint8_t                                   n   {8};  // Size of 'altitude' vector
-    float                           altitude[8];        // Initial altitudes
+    static constexpr uint8_t       N =  12; // Number of time steps
+    static constexpr uint8_t   halfN = N/2; // Half the number of time steps
+    static constexpr uint16_t deltaT = 250; // Time step between measurements (ms)
+    float                    altitude[N+1]; // Register of the last N+1 measurements
+
+    // Event flags (1 if condition is satisfied, 0 otherwise)
+    uint8_t             liftoffCondition {0};
+    uint8_t                fallCondition {0};
+    uint8_t              apogeeCondition {0};
+    uint8_t parachuteDeploymentCondition {0};
+    uint8_t             landingCondition {0};
 
 };
 
