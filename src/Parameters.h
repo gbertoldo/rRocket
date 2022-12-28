@@ -11,6 +11,12 @@
 #ifndef PARAMETERS_H
 #define PARAMETERS_H
 
+#define DEBUGMODE
+#ifdef DEBUGMODE
+#define DEBUGBAUDRATE 115200  
+#define STARTBAROMETERTIME 0 // Time added to millis/1000 in the simulation. Used to simulate device reinitialization during flight.
+#endif
+
 namespace Parameters
 {
   static constexpr char       softwareVersion[] {"rRocket v.1.5.0"}; // Version of this software

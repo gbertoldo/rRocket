@@ -16,8 +16,11 @@
 void HumanInterface::begin()
 {
 
+  #ifdef DEBUGMODE
+  Serial.begin(DEBUGBAUDRATE);
+  #else
   Serial.begin(9600);
-
+  #endif
   pinMode(Parameters::pinLed, OUTPUT);
 
   timeOfTheLastMessage = millis();

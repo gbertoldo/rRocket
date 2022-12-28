@@ -9,6 +9,12 @@
 
 
 #include "Barometer.h"
+#include "Parameters.h"
+
+#ifdef DEBUGMODE
+#include "TrajectoryModels.h"
+TrajectoryModel1 model;
+#endif // DEBUGMODE
 
 bool Barometer::begin()
 {
@@ -38,8 +44,11 @@ bool Barometer::begin()
 float Barometer::getAltitude()
 {
 
+  #ifdef DEBUGMODE
+  float altitude = model.y(1E-3*millis()+STARTBAROMETERTIME);
+  #else
   float altitude = barometer.readAltitude() - baseline;
-
+  #endif
   if ( altitude > apogee ) apogee = altitude;
 
   return altitude;

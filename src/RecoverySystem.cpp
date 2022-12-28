@@ -360,4 +360,39 @@ void RecoverySystem::checkFlyEvents()
         if ( altitude[i] > ymax ) ymax = altitude[i];
     }
     landingCondition = ( ymax-ymin < Parameters::displacementForLandingDetection ? 1 : 0 );
+
+    #ifdef DEBUGMODE
+
+    char cstate;
+
+    switch (state)
+    {
+    case RecoverySystemState::readyToLaunch:
+      cstate = 'R';
+      break;   
+    case RecoverySystemState::flying:
+      cstate = 'F';
+      break;   
+    case RecoverySystemState::drogueChuteActive:
+      cstate = 'D';
+      break;   
+    case RecoverySystemState::parachuteActive:
+      cstate = 'P';
+      break;   
+    case RecoverySystemState::recovered:
+      cstate = 'L';
+      break;   
+    default:
+      break;
+    }
+    Serial.print(1E-3*millis()+STARTBAROMETERTIME,3);
+    Serial.print(' ');
+    Serial.print(altitude[N]);
+    Serial.print(' ');
+    Serial.print(vavg);
+    Serial.print(' ');
+    Serial.print(cstate);
+    Serial.print('\n');
+    #endif
+
 };
