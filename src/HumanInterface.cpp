@@ -158,17 +158,23 @@ void HumanInterface::showReport(unsigned long int iTimeStep, Memory& memory)
   Serial.println(memory.readApogee());
   Serial.print("\nError code = ");
   uint16_t errorLog = memory.readErrorLog();
-  for (uint8_t i = 0; i < 16; ++i)
-  {
-    /* 
-      If the error is in the log, print it. See the error encode in the ErrorTable.h file.
-    */
-    if ( (errorLog & 2) == 2 )
+  if ( errorLog > 0 ){
+    for (uint8_t i = 0; i < 16; ++i)
     {
-      Serial.print(i);
-      Serial.print("; ");
+      /* 
+        If the error is in the log, print it. See the error encode in the ErrorTable.h file.
+      */
+      if ( (errorLog & 2) == 2 )
+      {
+        Serial.print(i);
+        Serial.print("; ");
+      }
+      errorLog = errorLog >> 1;
     }
-    errorLog = errorLog >> 1;
+  }
+  else
+  {
+    Serial.print('0');
   }
   Serial.println("");
 
