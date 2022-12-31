@@ -33,7 +33,7 @@ public:
 
         // Other input
         tA =   0.0; // Initial time
-        tB =  20.0; // Ignition time
+        tB =  10.0; // Ignition time
         yG =  40.0; // Final vertical position
         Uh =   1.0; // Uncertainty of y (+-1 m)
         Aperturbation = 50.0; // Amplitude of the perturbation (m)

@@ -146,11 +146,11 @@ void RecoverySystem::flyingRun()
   // If rocket is falling, activates drogue chute and changes recovery system's state
   if ( apogeeCondition + fallCondition > 0 )
   {
-    // Preparing actuator for drogue and parachute deployment
+    // Preparing actuator for drogue deployment
     actuator.reload();
 
-    // Deploying drogue chute
-    actuator.deployDrogueChute();
+    // Deploying drogue chute (for now, the stopCondition of the deployment cycle is false)
+    actuator.deployDrogueChute(false);
 
     // Changing recovery system's state
     state = RecoverySystemState::drogueChuteActive;
@@ -169,15 +169,24 @@ void RecoverySystem::drogueChuteActiveRun()
   // Registers altitude and writes to memory
   registerAltitude(true);
 
-  // Deploying drogue chute
-  actuator.deployDrogueChute();
+  // Asks the actuator to deploy the drogue parachute.
+  // After finishing one deployment cycle (turning on and off the drogue pin), the
+  // actuator evaluates the stop condition, i.e., the parachute deployment condition OR
+  // the number of deployment attempts. 
+  bool actuatorFinished = actuator.deployDrogueChute( ( parachuteDeploymentCondition > 0 ) ||
+                                               ( actuator.deployCounter >= Parameters::maxNumberOfDeploymentAttempts ) );
 
-  // If rocket is falling bellow parachute activation altitude, activates parachute and changes recovery system's state
-  if ( parachuteDeploymentCondition > 0 )
+  // If the parachute activation condition is true AND the actuator finished the deployment cycle, 
+  // activates parachute and changes the state of the recovery system.
+  // The conclusion of the deployment cycle is fundamental to ensure that the capacitor
+  // is recharged to the parachute deployment of the next state.
+  if ( actuatorFinished && parachuteDeploymentCondition > 0 )
   {
+    // Reloads the actuator (restarts the deploy counter etc...)
+    actuator.reload();
 
-    // Deploying parachute
-    actuator.deployParachute();
+    // Deploying the parachute (for now, the stopCondition of the deployment cycle is false)
+    actuator.deployParachute(false);
 
     // Changing recovery system's state
     state = RecoverySystemState::parachuteActive;
@@ -193,13 +202,17 @@ void RecoverySystem::parachuteActiveRun()
   // Registers altitude and writes to memory
   registerAltitude(true);
 
-  // Deploying parachute and drogue (if not yet)
-  actuator.deployDrogueChute();
-  actuator.deployParachute();
+  // Asks the actuator to deploy the main parachute.
+  // After finishing one deployment cycle (turning on and off the parachute pin), the
+  // actuator evaluates the stop condition, i.e., the number of deployment attempts.
+  // If the condition is not satisfied, another deployment cycle is started. 
+  actuator.deployParachute( actuator.deployCounter >= Parameters::maxNumberOfDeploymentAttempts );
 
   // If rocket is recovered, changes recovery system's state
   if ( landingCondition > 0 )
   {
+    // Reloads the actuator to ensure that the drogue and parachute pins are turned off.
+    actuator.reload();
 
     // Changing recovery system's state
     state = RecoverySystemState::recovered;
@@ -284,23 +297,29 @@ void RecoverySystem::registerAltitude(bool writeToMemory)
 
 void RecoverySystem::changeStateToFlying()
 {
+    // Storing data to memory using the corrected altitude
+    #ifdef DEBUGMODE
+    float newBaseline = 0.0;
+    #else
+    float newBaseline = altitude[0];
+    #endif
+
     // Setting barometer new baseline
-    barometer.setBaseline(altitude[0]);
+    barometer.setBaseline(newBaseline);
     /* 
       Why resetting the barometer height baseline? If altimeter stays switched on for a long time, environment pressure
       and temperature may change and, hence, change local baseline height. To avoid this problem, it is necessary to 
       reset the barometer height baseline when liftoff is detected.
     */
-
-    // Storing data to memory using the corrected altitude
-    float newBaseline = altitude[0];
-
     for (int i = 0; i <= N; i++) 
     {
       altitude[i] = altitude[i]-newBaseline;
       
       memory.appendAltitude(altitude[i]);
     }
+
+    // Reloads the actuator
+    actuator.reload();
     
     // Changing recovery system's state
     state = RecoverySystemState::flying;
