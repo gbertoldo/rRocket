@@ -31,19 +31,36 @@ class Actuator
     // Resets the Actuator
     void reload();
 
-    // Deploys main parachute
-    void deployParachute();
+    /* 
+      Deploys the main parachute. 
+      Returns true if the deployment has been finished.
+      Otherwise, returns false. 
+    */
+    bool deployParachute(bool stopCondition);
 
-    // Deploys drogue chute
-    void deployDrogueChute();
+    /* 
+      Deploys the drogue parachute. 
+      Returns true if the deployment has been finished.
+      Otherwise, returns false. 
+    */
+    bool deployDrogueChute(bool stopCondition);
 
   private:
 
-    uint8_t drogueDeployCounter {0};
-    uint8_t parachuteDeployCounter {0};
-    unsigned long int timeDrogueChuteWasActivated {0};  // time in that drogue chute was activated
-    unsigned long int timeParachuteWasActivated   {0};  // time in that parachute was activated
+    /* 
+      Generic method to deploys the parachute or the drogue parachute. 
+      Returns true if the deployment has been finished.
+      Otherwise, returns false. 
+    */
+    bool deploy(uint8_t pin, bool stopCondition);
 
+public:
+
+    uint8_t deployCounter {0};                // counts the number of activations
+
+  private:
+
+    unsigned long int lastTimeActivated {0};  // last instant where the parachute or drogue chute was activated
 };
 
 #endif // ACTUATOR_H

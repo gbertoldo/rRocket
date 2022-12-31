@@ -31,48 +31,67 @@ void Actuator::reload()
 
   digitalWrite(Parameters::pinParachute, LOW);
 
-  timeParachuteWasActivated = 0;
+  lastTimeActivated = 0;
 
-  timeDrogueChuteWasActivated = 0;
-
-  parachuteDeployCounter = 0;
-
-  drogueDeployCounter = 0;
+  deployCounter = 0;
 }
 
-void Actuator::deployParachute()
+bool Actuator::deployParachute(bool stopCondition)
 {
-  // If not deployed yet, deploy it
-  if ( parachuteDeployCounter == 0 )
-  {
-    digitalWrite(Parameters::pinParachute, HIGH);
-    timeParachuteWasActivated = millis();
-    parachuteDeployCounter++;
-  }
-  else
-  {
-    if ( abs(millis() - timeParachuteWasActivated) > Parameters::timeParachuteActive )
-    {
-      digitalWrite(Parameters::pinParachute, LOW);
-    }
-  }
-}
-
-
-void Actuator::deployDrogueChute()
-{
-  // If not deployed yet, deploy it
-  if ( drogueDeployCounter == 0 )
-  {
-    digitalWrite(Parameters::pinDrogueChute, HIGH);
-    timeDrogueChuteWasActivated = millis();
-    drogueDeployCounter++;
-  }
-  else
-  {
-    if ( abs(millis() - timeDrogueChuteWasActivated) > Parameters::timeDrogueChuteActive )
-    {
-      digitalWrite(Parameters::pinDrogueChute, LOW);
-    }
-  }
+  return deploy(Parameters::pinParachute, stopCondition);
 };
+
+bool Actuator::deployDrogueChute(bool stopCondition)
+{
+  return deploy(Parameters::pinDrogueChute, stopCondition);
+};
+
+bool Actuator::deploy(uint8_t pin, bool stopCondition)
+{
+  /*
+    If not deployed yet, starts the deployment cycle.
+    The deployment cycle is composed by a period for 
+    the actuator discharge (pin HIGH) and a period for
+    the capacitor recharge time (pin LOW).
+
+
+    Actuator discharge time
+    ______________________
+    |                     | Capacitor recharge time
+  __|                     |_________________________
+  */
+  
+  // If not deployed yet, starts the deployment cycle
+  if ( deployCounter == 0 )
+  {
+    digitalWrite(pin, HIGH);
+    lastTimeActivated = millis();
+    deployCounter++;
+  }
+  else
+  {
+    // If the deployment cycle has been elapsed, check the stop condition before starting another deployment cycle.
+    if ( abs(millis() - lastTimeActivated ) > ( Parameters::actuatorDischargeTime + Parameters::capacitorRechargeTime ) )
+    {
+      // If the stop condition is true, finishes the deployment cycle
+      if ( stopCondition )
+      {
+        digitalWrite(pin, LOW);
+        return true;
+      }
+      // Otherwise, starts another deployment cycle
+      else
+      {
+        digitalWrite(pin, HIGH);
+        lastTimeActivated = millis();
+        deployCounter++;
+      }
+    }
+    // If the actuator discharge time has bee elapsed, turn off the pin
+    else if ( abs(millis() - lastTimeActivated ) > Parameters::actuatorDischargeTime )
+    {
+      digitalWrite(pin, LOW);
+    }
+  }
+  return false;
+}
