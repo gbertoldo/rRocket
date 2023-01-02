@@ -60,18 +60,20 @@ bool Actuator::deploy(uint8_t pin, bool stopCondition)
     |                     | Capacitor recharge time
   __|                     |_________________________
   */
+
+  uint32_t currentTime = millis();
   
   // If not deployed yet, starts the deployment cycle
   if ( deployCounter == 0 )
   {
     digitalWrite(pin, HIGH);
-    lastTimeActivated = millis();
+    lastTimeActivated = currentTime;
     deployCounter++;
   }
   else
   {
     // If the deployment cycle has been elapsed, check the stop condition before starting another deployment cycle.
-    if ( abs(millis() - lastTimeActivated ) > ( Parameters::actuatorDischargeTime + Parameters::capacitorRechargeTime ) )
+    if ( currentTime > ( lastTimeActivated + Parameters::actuatorDischargeTime + Parameters::capacitorRechargeTime ) )
     {
       // If the stop condition is true, finishes the deployment cycle
       if ( stopCondition )
@@ -83,12 +85,12 @@ bool Actuator::deploy(uint8_t pin, bool stopCondition)
       else
       {
         digitalWrite(pin, HIGH);
-        lastTimeActivated = millis();
+        lastTimeActivated = currentTime;
         deployCounter++;
       }
     }
     // If the actuator discharge time has bee elapsed, turn off the pin
-    else if ( abs(millis() - lastTimeActivated ) > Parameters::actuatorDischargeTime )
+    else if ( currentTime > ( lastTimeActivated + Parameters::actuatorDischargeTime ) )
     {
       digitalWrite(pin, LOW);
     }
