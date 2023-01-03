@@ -19,7 +19,7 @@
 
 namespace Parameters
 {
-  static constexpr char       softwareVersion[] {"rRocket v.1.5.4"}; // Version of this software
+  static constexpr char       softwareVersion[] {"rRocket v.1.5.5"}; // Version of this software
   static constexpr int                                 pinLed  {13}; // Screen uses pin 13 to blink Arduino internal led
   static constexpr int                              pinBuzzer  {11}; // Pin of buzzer
   static constexpr int                              pinButton  {10}; // Pin of button
@@ -33,7 +33,7 @@ namespace Parameters
   static constexpr float      displacementForLandingDetection   {3}; // Displacement for landing detection (meter)
   static constexpr uint8_t      maxNumberOfDeploymentAttempts   {3}; // Maximum number of deployment attempts
   static constexpr uint32_t             actuatorDischargeTime {500}; // Time to discharge the capacitor of the actuator to deploy the parachute and the drogue (milliseconds)
-  static constexpr uint32_t             capacitorRechargeTime {500}; // Time to recharge the capacitor of the actuator (milliseconds)
+  static constexpr uint32_t            capacitorRechargeTime {1000}; // Time to recharge the capacitor of the actuator (milliseconds)
 
 }
 
