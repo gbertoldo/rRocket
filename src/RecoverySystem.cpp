@@ -123,7 +123,7 @@ void RecoverySystem::readyToLaunchRun()
   */
   
   // If flying, stores data to memory and changes recovery system's state
-  if ( liftoffCondition + fallCondition > 0 ) {
+  if ( liftoffCondition > 0 ) {
     changeStateToFlying();    
   }
   else
@@ -144,7 +144,7 @@ void RecoverySystem::flyingRun()
   humanInterface.showFlyingStatus();
 
   // If rocket is falling, activates drogue chute and changes recovery system's state
-  if ( apogeeCondition + fallCondition > 0 )
+  if ( ( apogeeCondition + fallCondition ) > 0 )
   {
     // Preparing actuator for drogue deployment
     actuator.reload();
@@ -180,7 +180,7 @@ void RecoverySystem::drogueChuteActiveRun()
   // activates parachute and changes the state of the recovery system.
   // The conclusion of the deployment cycle is fundamental to ensure that the capacitor
   // is recharged to the parachute deployment of the next state.
-  if ( actuatorFinished && parachuteDeploymentCondition > 0 )
+  if ( actuatorFinished && ( parachuteDeploymentCondition > 0 ) )
   {
     // Reloads the actuator (restarts the deploy counter etc...)
     actuator.reload();
@@ -233,7 +233,7 @@ void RecoverySystem::recoveredRun()
   // during the flight, and there is some data stored, the initial state will be 'recovered'.
   // To give the altimeter a chance to open the parachute, the flying condition is monitored.
   // If the condition is fullfiled, the state changes to 'flying'.
-  if ( liftoffCondition + fallCondition > 0 ) {
+  if ( ( liftoffCondition + fallCondition ) > 0 ) {
     // Saving the exception
     memory.writeErrorLog(error::RestartedDuringFlight);
     
