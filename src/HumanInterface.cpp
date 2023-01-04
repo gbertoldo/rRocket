@@ -169,7 +169,7 @@ void HumanInterface::showReport(unsigned long int iTimeStep, Memory& memory)
       */
       if ( (errorLog & 2) == 2 )
       {
-        Serial.print(i);
+        Serial.print(i+1);
         Serial.print("; ");
       }
       errorLog = errorLog >> 1;
