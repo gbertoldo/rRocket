@@ -235,7 +235,7 @@ void RecoverySystem::recoveredRun()
   // If the condition is fullfiled, the state changes to 'flying'.
   if ( ( liftoffCondition + fallCondition ) > 0 ) {
     // Saving the exception
-    memory.writeErrorLog(error::RestartedDuringFlight);
+    memory.writeErrorLog(error::FlightStartedWithNonEmptyMemory);
     
     // Changing state
     changeStateToFlying();  

@@ -32,11 +32,11 @@
 
 namespace error
 {
-  static constexpr uint16_t BarometerInitializationFailure {2 << 0}; // Error 0
-  static constexpr uint16_t ActuatorInitializationFailure  {2 << 1}; // Error 1
-  static constexpr uint16_t AltitudeNegativeOverflow       {2 << 2}; // Error 2
-  static constexpr uint16_t AltitudePositiveOverflow       {2 << 3}; // Error 3
-  static constexpr uint16_t RestartedDuringFlight          {2 << 4}; // Error 4
+  static constexpr uint16_t BarometerInitializationFailure  {2 << 0}; // Error 1
+  static constexpr uint16_t ActuatorInitializationFailure   {2 << 1}; // Error 2
+  static constexpr uint16_t AltitudeNegativeOverflow        {2 << 2}; // Error 3
+  static constexpr uint16_t AltitudePositiveOverflow        {2 << 3}; // Error 4
+  static constexpr uint16_t FlightStartedWithNonEmptyMemory {2 << 4}; // Error 5
 }
 
 #endif
