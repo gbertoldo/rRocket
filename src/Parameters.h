@@ -10,10 +10,11 @@
 
 #ifndef PARAMETERS_H
 #define PARAMETERS_H
+#include "Arduino.h"
 
 namespace Parameters
 {
-  static constexpr char       softwareVersion[] {"rRocket v.1.5.6"}; // Version of this software
+  static constexpr char       softwareVersion[] {"rRocket v.1.5.7"}; // Version of this software
   static constexpr int                                 pinLed  {13}; // Screen uses pin 13 to blink Arduino internal led
   static constexpr int                              pinBuzzer  {11}; // Pin of buzzer
   static constexpr int                              pinButton  {10}; // Pin of button

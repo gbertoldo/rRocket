@@ -12,6 +12,26 @@
 #include "Parameters.h"
 #include "ErrorTable.h"
 
+void showParameters()
+{
+    Serial.println(Parameters::softwareVersion);
+    Serial.print(F("Vl(m/s)="));
+    Serial.println(Parameters::speedForLiftoffDetection);
+    Serial.print(F("Va(m/s)="));
+    Serial.println(Parameters::speedForApogeeDetection);
+    Serial.print(F("Vf(m/s)="));
+    Serial.println(Parameters::speedForFallDetection);
+    Serial.print(F("Hp(m)="));
+    Serial.println(Parameters::parachuteDeploymentAltitude);
+    Serial.print(F("Dl(m)="));
+    Serial.println(Parameters::displacementForLandingDetection);
+    Serial.print(F("Td(ms)="));
+    Serial.println(Parameters::actuatorDischargeTime);
+    Serial.print(F("Tr(ms)="));
+    Serial.println(Parameters::capacitorRechargeTime);
+    Serial.print(F("Nd="));
+    Serial.println(Parameters::maxNumberOfDeploymentAttempts);
+}
 
 void HumanInterface::begin()
 {
@@ -29,16 +49,12 @@ void HumanInterface::showInitMessage()
 {
 
   // Clear Serial Monitor
-  for (int j = 0; j < 100; ++j) Serial.print("\n");
+  for (int j = 0; j < 100; ++j) Serial.println();
 
   // Printing header
-  Serial.println(" rRocket: An Arduino powered rocketry recovery system\n");
-  Serial.println(" Federal University of Technology - Parana - Brazil\n");
-  Serial.println(" Initializing Rocket Recovery System...\n");
-  Serial.print  ("\n ");
-  Serial.println(Parameters::softwareVersion);
-  Serial.println("");
-
+  Serial.println(F(" Initializing...\n\n"));
+  showParameters();
+  Serial.println();
 }
 
 
@@ -53,7 +69,8 @@ void HumanInterface::showReadyToLaunchStatus()
   if ( currentTime - timeOfTheLastMessage > 2000 )
   {
 
-    Serial.println("\n Recovery system is ready for launch!\n");
+    Serial.println(F("R"));
+
     timeOfTheLastMessage = currentTime;
     
   }
@@ -106,11 +123,10 @@ void HumanInterface::showRecoveredStatus()
   if ( currentTime - timeOfTheLastMessage > 2000 )
   {
 
-    Serial.println("\n Recovery system is recovered!");
-    Serial.print(  "   ");
-    Serial.println(Parameters::softwareVersion);
-    Serial.println("   Option 1 - Press the button quickly to recover data.");
-    Serial.println("   Option 2 - Press and hold by 3 seconds to erase memory.\n");
+    Serial.println(F("\n Recovered!\n\n"));
+    showParameters();
+    Serial.println(F("\n - Short press button to show data"));
+    Serial.println(F(" - Long press button to erase\n"));
     timeOfTheLastMessage = currentTime;
     
   }
@@ -154,9 +170,9 @@ void HumanInterface::blinkApogee(Memory& memory)
 void HumanInterface::showReport(unsigned long int iTimeStep, Memory& memory)
 {
 
-  Serial.print("\nApogee (m) = ");
+  Serial.print(F("\nApogee (m) = "));
   Serial.println(memory.readApogee());
-  Serial.print("\nError code = ");
+  Serial.print(F("\nError code = "));
   uint16_t errorLog = memory.readErrorLog();
   if ( errorLog > 0 ){
     for (uint8_t i = 0; i < 16; ++i)
@@ -167,7 +183,7 @@ void HumanInterface::showReport(unsigned long int iTimeStep, Memory& memory)
       if ( (errorLog & 2) == 2 )
       {
         Serial.print(i+1);
-        Serial.print("; ");
+        Serial.print(F("; "));
       }
       errorLog = errorLog >> 1;
     }
@@ -176,16 +192,16 @@ void HumanInterface::showReport(unsigned long int iTimeStep, Memory& memory)
   {
     Serial.print('0');
   }
-  Serial.println("");
+  Serial.println();
 
   float fTimeStep = ((float)iTimeStep)/1000.0;
   
-  Serial.println("Time (s); Altitude (m)");
+  Serial.println(F("Time (s); Altitude (m)"));
 
   for ( uint16_t i = 1; i <= memory.getNumberOfSlotsWritten(); ++i)
   {
     Serial.print((i-1) * fTimeStep);
-    Serial.print("; ");
+    Serial.print(F("; "));
     Serial.println(memory.readAltitude(i));
   }
 }
