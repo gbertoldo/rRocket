@@ -1,0 +1,39 @@
+Dados de voos - 28 Dez 2022
+
+Caso 1: voo bem-sucedido com apogeu entre 200 e 500 m.
+        Também vale como voo bem-sucedido com baixa velocidade de saída da rampa.
+        Netuno-F/Paraná-25/v2, LT 2 Dez 2019, H = 285 m 
+
+Caso 2: voo bem-sucedido com apogeu entre 500 e 1000 m.
+        Também vale como voo bem-sucedido com alta velocidade de saída da rampa.
+        Netuno-R-B/Paraná-7b, LT 7 Set 2017, H = 794 m 
+
+Caso 3: voo bem-sucedido com apogeu acima de 1000 m.
+        Também vale como voo com Mach 0.9.
+        Urano/Paraná-15b, LT 7 Set 2018, H = 1216 m 
+
+Caso 4: voo bem-sucedido com velocidade típica de saída da rampa.
+        Netuno-R-B/Paraná-26/v2, LT 2 Dez 2019, H = 541 m 
+
+
+Dados de voos - 2 Jan 2023
+
+Caso 5: voo instável com rotação na direção vertical.
+        Netuno-R-B/Paraná-7, LT 24 Jun 2017, H = 271 m 
+        Há um vídeo em anexo.
+
+Caso 6: voo instável lateral.
+        Urano/Paraná-30, LT 9 Jan 2022, H = 58 m, com hRocket.
+        O StratoLogger demorou para reconhecer o apogeu.
+        A ejeção foi praticamente no solo, não permitindo a abertura do paraquedas. 
+        Você estava presente ao lançamento.
+        Há um vídeo em anexo.
+
+Caso 7: voo instável lateral.
+        Plug/Paraná-24/v2, LT 15 Nov 2019, H-visual = 40 a 60 m.
+        Aparentemente o StratoLogger não reconheceu o lançamento,
+        talvez devido ao pequeno apogeu.
+        Com isso, não houve registro do voo pelo StratoLogger, 
+        nem a ativação do squib de ejeção do paraquedas.
+        Você estava presente ao lançamento.
+        Há um vídeo em anexo.

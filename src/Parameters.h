@@ -12,9 +12,19 @@
 #define PARAMETERS_H
 #include "Arduino.h"
 
+/* 
+
+  ***   CAUTION   *** 
+  -------------------
+
+    The altimeter will not work in real flights in the debug mode!!!
+    Uncomment the following line to activate the debug mode.
+*/
+//#define DEBUGMODE
+
 namespace Parameters
 {
-  static constexpr char       softwareVersion[] {"rRocket v.1.5.7"}; // Version of this software
+  static constexpr char       softwareVersion[] {"rRocket v.1.5.9"}; // Version of this software
   static constexpr int                                 pinLed  {13}; // Screen uses pin 13 to blink Arduino internal led
   static constexpr int                              pinBuzzer  {11}; // Pin of buzzer
   static constexpr int                              pinButton  {10}; // Pin of button

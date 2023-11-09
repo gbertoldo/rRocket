@@ -290,6 +290,36 @@ void RecoverySystem::registerAltitude(bool writeToMemory)
     if (writeToMemory) memory.appendAltitude(altitude[N]);
 
     checkFlyEvents();
+
+    #ifdef DEBUGMODE
+    Serial.print("<2,");
+    Serial.print(millis());
+    Serial.print(",");
+    Serial.print(altitude[N]);
+    Serial.print(",");
+    Serial.print(vAverage());
+    switch (state)
+    {
+    case RecoverySystemState::readyToLaunch:
+      Serial.print(",R");
+      break;
+    case RecoverySystemState::flying:
+      Serial.print(",F");
+      break;
+    case RecoverySystemState::drogueChuteActive:
+      Serial.print(",D");
+      break;
+    case RecoverySystemState::parachuteActive:
+      Serial.print(",P");
+      break;
+    case RecoverySystemState::recovered:
+      Serial.print(",L");
+      break;
+    default:
+      break;
+    }
+    Serial.println(">");
+    #endif
   }
 
 };

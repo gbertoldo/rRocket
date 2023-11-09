@@ -1,0 +1,5 @@
+# This file is used to clean the memory of rRocket (by pressing the altimeter button for 5 s)
+# python .\simulator.py COM4 .\launch-0.txt 0
+# t (s) h (m)
+0.00  0.00
+1000  0.0

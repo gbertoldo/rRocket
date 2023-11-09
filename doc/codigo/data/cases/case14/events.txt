@@ -1,0 +1,5 @@
+    27.25    344.89    -31.41 Queda detectada
+#    27.50    356.07    -37.88 Apogeu detectado
+#    27.50    356.07    -37.88 Queda detectada
+    29.75    186.23    -68.38 Paraquedas acionado
+    35.00     39.50      0.13 Pouso detectado

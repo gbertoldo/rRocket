@@ -1,0 +1,1 @@
+# t (s), h(m), v (m/s), estado (R=readyToLaunch, F=flying, D=Drogue, P=Parachute, L=landed(recovered))

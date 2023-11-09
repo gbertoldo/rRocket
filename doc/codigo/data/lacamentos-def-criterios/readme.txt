@@ -1,0 +1,1 @@
+Os diretorios lacamento-XX contém a análise de eventos de voos para os dados dos voos ./casos/caso-X.

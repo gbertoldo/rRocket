@@ -9,6 +9,12 @@
 
 
 #include "Barometer.h"
+#include "Parameters.h"
+
+#ifdef DEBUGMODE
+#include "MessageParser.h"
+MessageParser parser;
+#endif
 
 bool Barometer::begin()
 {
@@ -26,8 +32,12 @@ bool Barometer::begin()
   // Initializing BMP
   if (!barometer.begin(barometerAddress)) return false;
 
+  #ifdef DEBUGMODE
+  baseline = 0.0;
+  #else
   baseline = barometer.readAltitude(1013.25);
-
+  #endif
+  
   apogee = -500.0;
 
   return true;
@@ -38,7 +48,30 @@ bool Barometer::begin()
 float Barometer::getAltitude()
 {
 
-  float altitude = barometer.readAltitude() - baseline;
+  float altitude = 0.0;
+  
+  #ifdef DEBUGMODE
+  // Asking the user (via serial) for the altitude of the current instant 
+  unsigned long time = millis();
+  Serial.print("<1,");
+  Serial.print(time);
+  Serial.println(">");
+
+  while( true )
+  {
+    size_t sz = Serial.available();
+    for (size_t i = 0; i < sz; i++) 
+    {
+      parser.append(Serial.read());
+    }
+    if ( parser.hasMessage() ) break;
+  }
+  altitude = parser.getEntryFloat(1);
+  #else
+  altitude = barometer.readAltitude();
+  #endif
+
+  altitude -= baseline;
 
   if ( altitude > apogee ) apogee = altitude;
 

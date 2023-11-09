@@ -31,12 +31,18 @@ void showParameters()
     Serial.println(Parameters::capacitorRechargeTime);
     Serial.print(F("Nd="));
     Serial.println(Parameters::maxNumberOfDeploymentAttempts);
+    #ifdef DEBUGMODE
+    Serial.println("DEBUG MODE!");
+    #endif
 }
 
 void HumanInterface::begin()
 {
-
+  #ifdef DEBUGMODE
+  Serial.begin(115200);
+  #else
   Serial.begin(9600);
+  #endif
 
   pinMode(Parameters::pinLed, OUTPUT);
 

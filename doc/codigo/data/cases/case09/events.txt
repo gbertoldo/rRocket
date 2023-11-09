@@ -1,0 +1,9 @@
+     6.00     -0.93    -33.29 Queda detectada
+     6.25     -0.07    -30.73 Apogeu detectado
+     6.25     -0.07    -30.73 Queda detectada
+     6.50     -0.41    -21.27 Paraquedas acionado
+     8.75     -0.14      0.40 Pouso detectado
+    13.25    143.05     30.54 Decolagem detectada
+    19.75    261.60      6.87 Apogeu detectado
+    22.75    195.37    -22.25 Paraquedas acionado
+    29.00     39.37      0.03 Pouso detectado

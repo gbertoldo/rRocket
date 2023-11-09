@@ -1,0 +1,92 @@
+\subsection{Algoritmo}
+
+
+O arquivo principal do Arduino (\textit{rRocket.cpp}) possui uma instância da classe \textit{RecoverySystem}, que é inicializada assim que o altímetro é energizado. 
+Na inicialização do sistema de recuperação também são inicializados os componentes da classe \textit{RecoverySystem}, isto é, as instâncias das classes \textit{HumanInterface}, \textit{Button}, \textit{Memory}, \textit{Barometer} e \textit{Actuator}. As inicializações do barômetro e do atuador são críticas. Caso haja algum erro na inicialização destes componentes, o programa é bloqueado e um erro de inicialização é gravado na memória. Caso todos os componentes sejam inicializados com sucesso, o vetor de altitudes é inicializado com as leituras do barômetro. Por fim, o estado inicial do sistema de recuperação é definido de acordo com a memória. Se houver dados gravados, o estado inicial é definido como \textit{recovered}. Caso contrário, o estado inicial é definido como \textit{readyToLaunch}.
+
+Após a inicialização, o Arduino entra em um \textit{loop} infinito. A cada iteração do \textit{loop}, o método \textit{run} da classe \textit{RecoverySystem} é executado. É neste método que ocorre o controle do sistema de recuperação. O comportamento do sistema de recuperação depende do estado em que ele se encontra, respeitando a lógica do método de \textit{máquina de estados finitos}. A seguir são listadas as ações para cada estado possível:
+\begin{itemize}
+	\item \textbf{\textit{readyToLaunch}}
+	\begin{itemize}
+		\item Atualiza o vetor de altitudes $h_k$ sem gravá-lo na memória.\\
+		A atualização de $h_k$ consiste em 
+		\[h_k\leftarrow h_{k+1}, \quad 0 \le k \le N-2\quad \text{e}\quad h_{N-1}\leftarrow \text{leitura do barômetro}\]
+		a cada \textit{timeStep}=250~ms.
+		\item Caso a condição de voo seja satisfeita,
+		\begin{itemize}
+			\item define o primeiro elemento do vetor de altitudes como a altitude de referência no barômetro;
+			\item grava todo o vetor de altitudes na memória;
+			\item altera o estado para \textit{flying};
+		\end{itemize}
+		\item Caso a condição de voo não seja satisfeita
+		\begin{itemize}
+			\item solicita que a instância da \textit{HumanInterface} apresente o \textit{status} ``pronto para lançamento'', que consiste em (i)
+			imprimir na porta serial a mensagem de que o sistema está pronto para lançamento, (ii) piscar o LED e (iii) acionar o \textit{buzzer} a cada 1,5 segundos;
+		\end{itemize}
+	\end{itemize}
+	A condição de voo é satisfeita se $|h_N-h_1|>D_l$, onde $D_l$ é um parâmetro definido pelo usuário. No arquivo \textit{Parameters.h}, $D_l$ é definido na variável \textit{displacementForLiftoffDetection}.
+	\item \textbf{\textit{flying}}
+	\begin{itemize}
+		\item Atualizar o vetor de altitudes $h_k$ e registrar a última altitude na memória.
+		\item Solicitar que a instância de \textit{HumanInterface} atualize o \textit{status} para ``em voo''
+		\item Avaliar a condição de queda, dada por \textbf{(rever)}
+		\[|h_{N-1}-H_\text{max}|>D_f,\]
+		onde $H_\text{max}$ é o apogeu registrado pelo barômetro até o momento, e $D_f$ é um parâmetro definido pelo usuário no arquivo \textit{Parameters.h} por meio da variável \textit{displacementForDrogueChuteDeployment}.
+		Caso a condição de queda seja satisfeita
+		\begin{itemize}
+			\item Recarregar o atuador. Isto é fundamental para o caso em que o sistema de recuperação tenha sido reiniciado durante o voo e o atuador já tenha sido utilizado.
+			\item Acionar o paraquedas auxiliar (\textit{drogue})
+			\item Alterar o estado para \textit{drogueChuteActive}
+			\item Gravar o apogeu na memória
+		\end{itemize}	
+	\end{itemize}
+	\item \textbf{\textit{drogueChuteActive}}
+	\begin{itemize}
+	\item Atualizar o vetor de altitudes $h_k$ e registrar a última altitude na memória.
+	\item \textbf{Solicitar que o atuador acione o paraquedas auxiliar.}
+	\item Avaliar a condição de ativação do paraquedas, dada por 
+	\[h_{N-1}<H_p,\]
+	onde $H_p$ é a altitude para qual o paraquedas deve ser ativado. Este parâmetro é definido pelo usuário no arquivo \textit{Parameters.h} por meio da variável \textit{parachuteDeploymentAltitude}.
+	Caso a condição de queda seja satisfeita
+	\begin{itemize}
+		\item Acionar o paraquedas principal
+		\item Alterar o estado para \textit{parachuteActive}
+	\end{itemize}	
+	\end{itemize}
+	\item \textbf{\textit{parachuteActive}}
+	\begin{itemize}
+	\item Atualizar o vetor de altitudes $h_k$ e registrar a última altitude na memória.
+	\item \textbf{Solicitar que o atuador acione o paraquedas auxiliar e o principal.}
+	\item Avaliar a condição de recuperação, dada por 
+	\[|h_{N-1}-h_0|< D_r,\]
+	onde $D_r$ é a tolerância para o deslocamento em caso de repouso e está associado à incerteza do barômetro. Este parâmetro é definido pelo usuário no arquivo \textit{Parameters.h} por meio da variável \textit{displacementForRecoveryDetection}.
+	Caso a condição de recuperação seja satisfeita
+	\begin{itemize}
+		\item Alterar o estado para \textit{recovered}
+	\end{itemize}	
+	\end{itemize}
+	\item \textbf{\textit{recovered}}	
+	\begin{itemize}
+	\item Atualizar o vetor de altitudes $h_k$ e registrar a última altitude na memória.
+	\item Avaliar a condição de voo ??
+	\begin{itemize}
+		\item Caso a condição de voo seja satisfeita
+		\begin{itemize}
+			\item Registrar erro de ``reiniciado durante o voo''
+			\item Alterar o estado para \textit{flying}
+		\end{itemize}	
+		\item Caso a condição de voo não seja satisfeita
+		\begin{itemize}
+			\item Solicitar à instância da \textit{HumanInterface} para apresentar o \textit{status} ``recuperado''.
+			\item Ler o botão
+			\begin{enumerate}
+				\item Se pressionado por menos de 3 segundos, 
+				Solicitar  à instância da \textit{HumanInterface} para apresentar o apogeu
+				\item Solicitar  à instância da \textit{HumanInterface} para apresentar o relatório de resultados através da porta serial
+				\item Se pressionado por mais de 3 segundos, 
+				
+			\end{enumerate}
+		\end{itemize}
+	\end{itemize}
+	\end{itemize}		
+\end{itemize}

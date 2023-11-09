@@ -1,0 +1,18 @@
+reset
+set term pdf enhanced color
+set out 'Netuno-R-B_Galateia-5_sl-9_em_2023-01-29.pdf'
+
+file="Netuno-R-B_Galateia-5_sl-9_em_2023-01-29.pf2"
+
+#set grid
+
+set xlabel 't (s)'
+set ylabel 'h (m)'
+
+set y2tics nomirror
+set y2label 'T (oC)' tc lt 2
+set y2range [29.2:29.6]
+
+plot file u 1:($2*0.3048) w lp ps 0.2 axes x1y1 t 'h (m)', '' u 1:(($4-32)*5.0/9) w lp ps 0.2 axes x1y2 t 'T (oC)'
+
+
