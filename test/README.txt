@@ -49,3 +49,7 @@ launch-11:
 launch-12:
 	Saturno-Alfa-2/Titã-3			LT 29 Jan 2023		StratoLoggerCF (SL-8)
 	python .\simulator.py COM4 launch-12.txt 10
+	
+launch-13:
+  Netuno-F/Galateia-9			LT 17 Dez 2023		StratoLoggerCF (SL-9)	
+  python .\simulator.py COM4 launch-13.txt 10
