@@ -1,26 +1,37 @@
+/*
+  The MIT License (MIT)
 
+  Copyright (C) 2022 Guilherme Bertoldo and Jonas Joacir Radtke
+  (UTFPR) Federal University of Technology - Parana
 
-    /**********************************************************************\
-   /          rRocket: An Arduino powered rocketry recovery system          \
-  /            Federal University of Technology - Parana - Brazil            \
-  \              by Guilherme Bertoldo and Jonas Joacir Radtke               /
-   \                       updated September 12, 2022                       /
-    \**********************************************************************/
+  Permission is hereby granted, free of charge, to any person obtaining a 
+  copy of this software and associated documentation files (the “Software”), 
+  to deal in the Software without restriction, including without limitation 
+  the rights to use, copy, modify, merge, publish, distribute, sublicense, 
+  and/or sell copies of the Software, and to permit persons to whom the Software 
+  is furnished to do so, subject to the following conditions:
 
+  The above copyright notice and this permission notice shall be included in all 
+  copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, 
+  WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
+  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+*/
 
 #ifndef MEMORY_H
 #define MEMORY_H
 
 #include <EEPROM.h>
+#include "ParametersDynamic.h"
 
 /*
 
   Class Memory uses EEPROM to store the data of the flight.
-
-  The EEPROM is organized as follow:
-    - Addresses  0 to 1   (2 bytes): reserved to store the log of errors of the last flight
-    - Addresses  2 to ... (? bytes): reserved to store the altitude from the launching point (AGL) during the flight
-                                      The first position is reserved to store the apogee.
 
   Since measurements are made in known time steps, only the altitude AGL is stored. The altitude
   is converted from float (4 bytes) to unsigned integers uint16_t (2 bytes) to reduce memory consumption.
@@ -43,34 +54,39 @@ class Memory
     // Initializes
     bool begin();
 
-    // Returns the total amount of memory from EEPROM (bytes)
-    uint16_t getMemorySize(){return EEPROM.length();};
-
     /* 
       Returns the maximum number of slots to store the altitudes 
       during the flight. Each slot occupies 2 bytes.
     */
     uint16_t getNumberOfSlots(){return numberOfSlots;};
 
-    // Returns the number of slots written so far
+    // Returns the number of the last slot written
     uint16_t getNumberOfSlotsWritten(){return numberOfSlotsWritten;};
 
     // Reads the altitude from EEPROM memory at slot position i (0 <= i <= getNumberOfSlots())
-    // Position i = 0, returns the apogee.
     float readAltitude(const uint16_t& i);
 
     // Writes the altitude at EEPROM memory at slot position i (0 <= i <= getNumberOfSlots())
-    // Position i = 0 is reserved to the apogee.
     bool writeAltitude(const uint16_t& i, float altitude);
 
     // Appends the altitude to EEPROM memory
     bool appendAltitude(float altitude);
 
     // Get apogee from EEPROM memory
-    float readApogee(){return readAltitude(0);};
+    float readApogee();
 
-    // Write apogee to EEPROM memory
-    bool writeApogee(float apogee){return writeAltitude(0, apogee);};
+    /* 
+      Writes the deltaTMultiplier of the event c to the memory
+      'F': flight detected
+      'D': drogue activated
+      'P': parachute activated
+      'L': landed
+       t = deltaTMultiplier x deltaT (milliseconds) 
+    */
+    void writeEvent(const char& c, const uint16_t& deltaTMultiplier);
+
+    // Reads deltaTMultiplier of the event c from the memory (see writeEvent for more details)
+    uint16_t readEvent(const char& c);
 
     // Returns the log of errors of the last flight
     uint16_t readErrorLog()
@@ -103,13 +119,24 @@ class Memory
     // Erase memory
     void erase();
 
+    // Write flight parameters
+    void writeFlightParameters(const FlightParameters& p);
+
+    // Write flight parameters
+    FlightParameters readFlightParameters();
+
   private:
 
     // Position of the memory where the data are written
-    static constexpr uint16_t addrErrorLog                 {0};
-    static constexpr uint16_t addrAltitudesBegin           {2};
+    static constexpr uint16_t addrFlightParameters         {0};
+    static constexpr uint16_t addrErrorLog                 {sizeof(FlightParameters)/sizeof(byte)};
+    static constexpr uint16_t addrliftoffEvent              {addrErrorLog+2};
+    static constexpr uint16_t addrDrogueEvent              {addrliftoffEvent+2};
+    static constexpr uint16_t addrParachuteEvent           {addrDrogueEvent+2};
+    static constexpr uint16_t addrLandedEvent              {addrParachuteEvent+2};
+    static constexpr uint16_t addrAltitudesBegin           {addrLandedEvent+2};
 
-    // Number of slots written in the memory
+    // Number of slots written in the memory (refers to the last slot written)
     uint16_t numberOfSlotsWritten {0};
 
     // Number of slots available in the memory

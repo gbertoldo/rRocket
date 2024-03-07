@@ -1,26 +1,40 @@
+/*
+  The MIT License (MIT)
 
+  Copyright (C) 2022 Guilherme Bertoldo and Jonas Joacir Radtke
+  (UTFPR) Federal University of Technology - Parana
 
-    /**********************************************************************\
-   /          rRocket: An Arduino powered rocketry recovery system          \
-  /            Federal University of Technology - Parana - Brazil            \
-  \              by Guilherme Bertoldo and Jonas Joacir Radtke               /
-   \                       updated September 12, 2022                       /
-    \**********************************************************************/
+  Permission is hereby granted, free of charge, to any person obtaining a 
+  copy of this software and associated documentation files (the “Software”), 
+  to deal in the Software without restriction, including without limitation 
+  the rights to use, copy, modify, merge, publish, distribute, sublicense, 
+  and/or sell copies of the Software, and to permit persons to whom the Software 
+  is furnished to do so, subject to the following conditions:
 
+  The above copyright notice and this permission notice shall be included in all 
+  copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, 
+  WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
+  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+*/
 
 #include "Arduino.h"
 #include "Memory.h"
-#include "ErrorTable.h"
+#include "ParametersStatic.h"
 
 bool Memory::begin()
 {
   // Number of available slots to save altitudes during flight
-  // The first slots is reserved for the apogee.
-  numberOfSlots = (uint16_t)(((float)getMemorySize()-addrAltitudesBegin)/2.0) - 1;
+  numberOfSlots = (uint16_t)(((float)EEPROM.length()-addrAltitudesBegin)/2.0)-1;
 
   // Reading from memory the number of altitude registers
   numberOfSlotsWritten = 0;
-  for ( uint16_t i = 1; i <= numberOfSlots; ++i)
+  for ( uint16_t i = 0; i < numberOfSlots; ++i)
   {
     uint16_t iAltitude, address;
 
@@ -28,7 +42,7 @@ bool Memory::begin()
 
     EEPROM.get(address, iAltitude);
 
-    if ( iAltitude == 0 ) 
+    if ( iAltitude == 0xFF ) 
     {
       break;
     }
@@ -43,7 +57,7 @@ bool Memory::begin()
 float Memory::readAltitude(const uint16_t& i)
 {
   // If the position is out of range, returns 0
-  if ( i > numberOfSlots ) return 0.0;
+  if ( i >= numberOfSlots ) return 0.0;
 
   // The altitude is written as unsigned integers of 16 bits.
   // It must be converted to float.
@@ -58,7 +72,7 @@ float Memory::readAltitude(const uint16_t& i)
 
   // Converts the altitude from decimeter to meter and removes the 500 m added
   // when the altitude was saved. 
-  fAltitude = ((float)iAltitude)/10.0-500.0;
+  fAltitude = ((float)iAltitude)*0.1-500.0;
 
   return fAltitude;
 }
@@ -66,7 +80,7 @@ float Memory::readAltitude(const uint16_t& i)
 bool Memory::writeAltitude(const uint16_t& i, float fAltitude)
 {
   // If the position is out of range, returns 0
-  if ( i > numberOfSlots ) return false;
+  if ( i >= numberOfSlots ) return false;
 
   fAltitude = fAltitude + 500.0; // increase 500 meters to write positive altitudes
 
@@ -108,6 +122,14 @@ bool Memory::writeAltitude(const uint16_t& i, float fAltitude)
   // Saving to EEPROM
   EEPROM.put(address, iAltitude);
 
+  // Updating the last slot written and the end of memory mark (0xFF)
+  if ( i >= numberOfSlotsWritten ) 
+  {
+    numberOfSlotsWritten = i+1;
+    // Saving to EEPROM
+    EEPROM.put(address+2, 0xFF);
+  }
+
   return true;
 }
 
@@ -115,15 +137,7 @@ bool Memory::appendAltitude(float altitude)
 {
   if ( numberOfSlotsWritten < numberOfSlots )
   {
-    if ( writeAltitude(numberOfSlotsWritten+1, altitude) )
-    {
-      numberOfSlotsWritten++;
-      return true;
-    }
-    else
-    {
-      return false;
-    }
+    return writeAltitude(numberOfSlotsWritten, altitude);
   }
   else
   {
@@ -131,8 +145,112 @@ bool Memory::appendAltitude(float altitude)
   }
 }
 
+float Memory::readApogee()
+{
+  float apogee = 0.0;
+  float faux = -1E5;
+
+  for (uint16_t i = 0; i < numberOfSlotsWritten; ++i)
+  {
+    uint16_t address = 2*i + addrAltitudesBegin;
+
+    faux = readAltitude(address);
+    if ( faux > apogee ) apogee = faux;
+  }
+  return apogee;
+}
+
+void Memory::writeEvent(const char& c, const uint16_t& deltaTMultiplier)
+{
+  switch (c)
+  {
+    case 'F':
+    {
+      EEPROM.put(addrliftoffEvent,deltaTMultiplier);
+      break;
+    }
+    case 'D':
+    {
+      EEPROM.put(addrDrogueEvent,deltaTMultiplier);
+      break;
+    }
+    case 'P':
+    {
+      EEPROM.put(addrParachuteEvent,deltaTMultiplier);
+      break;
+    }
+    case 'L':
+    {
+      EEPROM.put(addrLandedEvent,deltaTMultiplier);
+      break;
+    }
+  default:
+    break;
+  }
+}
+
+uint16_t Memory::readEvent(const char& c)
+{
+  uint16_t deltaTMultiplier = 0xFF;
+  switch (c)
+  {
+    case 'F':
+    {
+      EEPROM.get(addrliftoffEvent,deltaTMultiplier);
+      break;
+    }
+    case 'D':
+    {
+      EEPROM.get(addrDrogueEvent,deltaTMultiplier);
+      break;
+    }
+    case 'P':
+    {
+      EEPROM.get(addrParachuteEvent,deltaTMultiplier);
+      break;
+    }
+    case 'L':
+    {
+      EEPROM.get(addrLandedEvent,deltaTMultiplier);
+      break;
+    }
+  default:
+    break;
+  }
+
+  return deltaTMultiplier;
+}
+
 void Memory::erase()
 {
-  for (uint16_t i = 0; i < EEPROM.length(); i++) EEPROM.write(i, 0);
+  uint16_t value = 0;
+  EEPROM.put(addrErrorLog, value);
+  EEPROM.put(addrliftoffEvent, value);
+  EEPROM.put(addrDrogueEvent, value);
+  EEPROM.put(addrParachuteEvent, value);
+  EEPROM.put(addrLandedEvent, value);
+
+  value = 0xFF; // Maximum value of uint16_t (hexadecimal) 
+  /*
+  for (uint16_t i = 0; i < numberOfSlots; i++){
+    uint16_t address = 2*i + addrAltitudesBegin;
+    EEPROM.put(address, value);
+  } 
+  */
+  EEPROM.put(addrAltitudesBegin, value);
   numberOfSlotsWritten = 0;
 };
+
+
+void Memory::writeFlightParameters(const FlightParameters& p)
+{
+  EEPROM.put(addrFlightParameters, p);
+}
+
+
+FlightParameters Memory::readFlightParameters()
+{
+  FlightParameters p;
+  EEPROM.get(addrFlightParameters, p);
+  return p;
+}

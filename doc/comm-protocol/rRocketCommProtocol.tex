@@ -1,0 +1,213 @@
+\documentclass[portuguese,10pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{babel}
+\usepackage[left=2cm, right=2cm, top=2cm, bottom=2cm]{geometry}
+\title{rRocket v1.6.x \\Protocolo de comunicação serial}
+\author{Guilherme Bertoldo}
+
+\newcommand{\nexplanation}{definição do período de registro de altitude na memória permanente após acionamento do paraquedas auxiliar. Considerando que o período de amostragem seja $\Delta t$, o multiplicador $n$ é usado para definir o período de gravação como $n \times \Delta t$. Desta forma é possível otimizar o uso da memória permanente (EEPROM), que no Arduino Nano é de apenas 1024 bytes.}
+
+\begin{document}
+	\maketitle
+\section{Introdução}
+A versão 1.6.x do rRocket utiliza um protocolo de comunicação entre o  altímetro e computador (ou outros dispositivos) via porta serial (UART/USART). Esta comunicação serve para configurações do altímetro, leitura de registro do último voo e simulações de voo.  
+
+Os parâmetros de configuração da porta serial são os seguintes:
+\begin{itemize}
+	\item \textit{baudrate}: 115200
+	\item \textit{bytesize}: 8
+	\item \textit{parity}: nenhum
+	\item \textit{stopbits}: 1
+	\item \textit{xonxoff}: desativado
+	\item \textit{rtscts}: desativado
+	\item \textit{dsrdtr}: desativado
+\end{itemize}
+
+Todas as mensagens enviadas ou recebidas pelo altímetro seguem o padrão:
+\begin{equation}
+	\langle I, X_1, \cdots, X_N \rangle,
+	\nonumber
+\end{equation}
+onde $I$ é um número identificador da mensagem e $X_i$ ($1\le i \le N$) são campos do tipo inteiro, real ou texto.
+
+A seguir, são listados os códigos identificadores de mensagens, seus respectivos campos, tipos e unidades (quando existirem).
+
+\section{Mensagens recebidas pelo rRocket}
+\begin{itemize}
+	\item $\langle 0\rangle$:
+	Solicita ao altímetro a listagem de todos os parâmetros de \textit{firmware} (versão de firmware, tempo de descarga do capacitor sobre o atuador, tempo de carga do capacitor, período de amostragem da altura, número de amostras de altura para cálculo de estatística de voo).
+	\item $\langle 1\rangle$:
+	Solicita ao altímetro a listagem de todos os parâmetros de configuração.
+	\item $\langle 2\rangle$:
+	Solicita que o altímetro grave na memória permanente os parâmetros de configuração recebidos. Para evitar a regravação na memória EEPROM, que é relativamente demorada e possui um ciclo de vida, todos os parâmetros de configuração recebidos pelo altímetro ficam armazenados na memória temporária. Somente após o recebimento pelo altímetro do comando $\langle 2\rangle$, os parâmetros são gravados na memória permanente.
+	\item $\langle 3\rangle$: 
+	Solicita ao altímetro a redefinição dos parâmetros de configuração com os parâmetros de fábrica, isto é, aqueles gravados no \textit{firmware}.
+	\item $\langle 4\rangle$:
+	Solicita ao altímetro a limpeza da memória do último voo.
+	\item $\langle 5\rangle$:
+	Solicita ao altímetro o envio do relatório do último voo.
+	\item $\langle 6, m\rangle$:
+	Solicita ao altímetro a definição do seu modo de operação.
+	\begin{itemize}
+		\item $m$: tipo: inteiro; valores: 0=modo real, 1=modo simulado.
+	\end{itemize}
+	\item $\langle 7, h\rangle$:
+	Informa ao altímetro a altura $h$ para o instante $t$ (isto é, $h(t)$), como resposta à uma requisição realizada pelo próprio altímetro quando no modo simulado.
+	\begin{itemize}
+		\item $h$: tipo: inteiro, unidade: cm.  
+	\end{itemize}
+	\item $\langle 8, v\rangle$:
+	Solicita ao altímetro a definição da velocidade para detecção de decolagem.
+	\begin{itemize}
+		\item $v$: tipo: inteiro, unidade: m/s.  
+	\end{itemize}
+	\item $\langle 9, v\rangle$:
+	Solicita ao altímetro a definição da velocidade (em módulo) para detecção de queda.
+	\begin{itemize}
+		\item $v$: tipo: inteiro, unidade: m/s.  
+	\end{itemize}
+	\item $\langle 10, v\rangle$:
+	Solicita ao altímetro a definição da velocidade para acionamento do paraquedas auxiliar (drogue).
+	\begin{itemize}
+		\item $v$: tipo: inteiro, unidade: m/s.  
+	\end{itemize}
+	\item $\langle 11, h\rangle$: 
+	Solicita ao altímetro a definição da altura para acionamento do paraquedas principal.
+	\begin{itemize}
+		\item $h$: tipo: inteiro, unidade: m.  
+	\end{itemize}
+	\item $\langle 12, d\rangle$:
+	Solicita ao altímetro a definição do deslocamento máximo para detecção de pouso.
+	\begin{itemize}
+		\item $d$: tipo: inteiro, unidade: m.  
+	\end{itemize}
+	\item $\langle 13, n\rangle$:
+	Solicita ao altímetro a definição do número de tentativas de acionamento de cada um dos paraquedas (auxiliar e principal).
+	\begin{itemize}
+		\item $n$: tipo: inteiro.  
+	\end{itemize}
+	\item $\langle 14, n\rangle$: 
+		
+	
+	Solicita ao altímetro a alteração do parâmetro $n$ para \nexplanation6
+	\begin{itemize}
+		\item $n$: tipo: inteiro.  
+	\end{itemize}
+\end{itemize}
+
+\section{Mensagens enviadas pelo rRocket}
+
+\begin{itemize}
+	\item $\langle 0, s\rangle$: Retorna todos os código de erro (separados por ponto e vírgula).
+	  \begin{itemize}
+	  	\item $s$: tipo: texto.  
+	  \end{itemize}
+  Os códigos de erro são:
+	\begin{itemize}
+		\item 0: nenhum erro registrado.
+		\item 1: falha ao inicializar o barômetro.
+		\item 2: falha ao inicializar o atuador.
+		\item 3: altura menor que o limite inferior para registro em memória (-500 m).
+		\item 4: altura maior que o limite superior para registro em memória (6500 m).
+		\item 5: voo iniciado com memória do último voo não apagada.
+	\end{itemize}
+	\item $\langle 1, t\rangle$: Mensagem enviada somente no modo simulado para solicitar a altura $h$ no instante $t$.
+	\begin{itemize}
+		\item $t$: tipo: inteiro; unidade: ms.  
+	\end{itemize}
+	\item $\langle 2, t, h, v, a, c\rangle$: Mensagem enviada somente no modo simulado para informar o estado do altímetro.
+	\begin{itemize}
+		\item $t$: tempo; tipo: inteiro, unidade: ms.
+		\item $h$: altura; tipo: inteiro, unidade: dm.
+		\item $v$: velocidade; tipo: inteiro, unidade: dm/s .
+		\item $a$: aceleração; tipo: inteiro, unidade: dm/s$^2$.
+		\item $c$: estado; tipo: caracter; valor:
+		\begin{itemize}
+			\item R: altímetro pronto para uso
+			\item F: em voo
+			\item D: em queda, com acionamento do paraquedas auxiliar
+			\item P: em queda, com acionamento do paraquedas principal
+			\item L: aterrissado
+		\end{itemize} 
+	\end{itemize}
+	\item $\langle 3, t, h\rangle$: No relatório do último voo, altura $h$ correspondente ao instante $t$ a partir do início dos registros de voo.
+	\begin{itemize}
+		\item $t$: tempo; tipo: inteiro, unidade: ms.
+		\item $h$: altura; tipo: inteiro, unidade: dm.
+	\end{itemize}
+	\item $\langle 4, s\rangle$: Versão do firmware.
+	\begin{itemize}
+		\item $s$: tipo: texto.
+	\end{itemize}
+	\item $\langle 5, n\rangle$: Modo de operação (real ou simulado).
+	\begin{itemize}
+		\item $n$: tipo: inteiro; valor: 0=real, 1=simulado.
+	\end{itemize}
+	\item $\langle 6\rangle$: Sinaliza o início do processo de inicialização do altímetro.
+	\item $\langle 7\rangle$: Sinaliza o fim do processo de inicialização do altímetro.
+	\item $\langle 8\rangle$: Sinaliza o início do processo de envio de relatório de voo.
+	\item $\langle 9\rangle$: Sinaliza o fim do processo de envio de relatório de voo.
+	\item $\langle 10, t\rangle$: Instante, a partir do início do registro de voo, em que o evento de lançamento foi detectado.
+	\begin{itemize}
+		\item $t$: tipo: inteiro; unidade: ms.
+	\end{itemize}
+	\item $\langle 11, t\rangle$: Instante, a partir do início do registro de voo, em que o evento de acionamento de paraquedas auxiliar foi detectado.
+	\begin{itemize}
+		\item $t$: tipo: inteiro; unidade: ms.
+	\end{itemize}
+	\item $\langle 12, t\rangle$: Instante, a partir do início do registro de voo, em que o evento de acionamento de paraquedas principal foi detectado.
+	\begin{itemize}
+		\item $t$: tipo: inteiro; unidade: ms.
+	\end{itemize}
+	\item $\langle 13, t\rangle$: Instante, a partir do início do registro de voo, em que o evento de pouso foi detectado.
+	\begin{itemize}
+		\item $t$: tipo: inteiro; unidade: ms.
+	\end{itemize}	
+	\item $\langle 14, t\rangle$: Tempo de descarga do capacitor sobre o atuador.
+	\begin{itemize}
+		\item $t$: tipo: inteiro; unidade: ms.
+	\end{itemize}	
+	\item $\langle 15, t\rangle$: Tempo para recarga do capacitor.
+	\begin{itemize}
+		\item $t$: tipo: inteiro; unidade: ms.
+	\end{itemize}
+	\item $\langle 16, n\rangle$: Número de medições de altura para cálculo de estatística de voo.
+	\begin{itemize}
+		\item $n$: tipo: inteiro
+	\end{itemize}
+	\item $\langle 17, t\rangle$: Período de amostragem de altura.
+	\begin{itemize}
+		\item $t$: tipo: inteiro; unidade: ms.
+	\end{itemize}	
+	\item $\langle 18, v\rangle$: Velocidade para detecção de lançamento.
+	\begin{itemize}
+		\item $v$: tipo: inteiro; unidade: m/s.
+	\end{itemize}
+	\item $\langle 19, v\rangle$: Velocidade (em módulo) para detecção de queda.
+	\begin{itemize}
+		\item $v$: tipo: inteiro; unidade: m/s.
+	\end{itemize}
+	\item $\langle 20, v\rangle$: Velocidade para acionamento do paraquedas auxiliar.
+	\begin{itemize}
+		\item $v$: tipo: inteiro; unidade: m/s.
+	\end{itemize}
+	\item $\langle 21, h\rangle$: Altura (acima do ponto de lançamento) para acionamento do paraquedas principal.
+	\begin{itemize}
+		\item $h$: tipo: inteiro; unidade: m.
+	\end{itemize}
+	\item $\langle 22, d\rangle$: Deslocamento máximo para detecção de pouso.
+	\begin{itemize}
+		\item $d$: tipo: inteiro; unidade: m.
+	\end{itemize}
+	\item $\langle 23, n\rangle$: Número de tentativas de acionamento de cada um dos paraquedas (auxiliar e principal).
+	\begin{itemize}
+		\item $n$: tipo: inteiro.
+	\end{itemize}
+	\item $\langle 24, n\rangle$: 
+		Parâmetro para \nexplanation
+		\begin{itemize}
+			\item $n$: tipo: inteiro.  
+		\end{itemize}
+\end{itemize}
+\end{document}

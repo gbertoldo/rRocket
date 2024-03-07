@@ -1,8 +1,8 @@
-rRocket is an Arduino powered rocketry recovery system.
+rRocket is an Arduino-powered rocketry recovery system.
 
 Features
 ========
-- Drogue and parachute deployment events
+- Drogue and parachute deployment
 - Data stored in EEPROM
 - Error report
 

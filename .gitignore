@@ -3,3 +3,6 @@
 .vscode/c_cpp_properties.json
 .vscode/launch.json
 .vscode/ipch
+doc/comm-protocol/rRocketCommProtocol.aux
+doc/comm-protocol/rRocketCommProtocol.log
+doc/comm-protocol/rRocketCommProtocol.synctex.gz

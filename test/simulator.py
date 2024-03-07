@@ -4,6 +4,7 @@ import serial
 import serial.tools.list_ports
 import pandas as pd 
 import plotter
+import time
 
 # Lists the available serial ports
 def availableSerialPorts():
@@ -152,8 +153,11 @@ rRocketPreviousState = ""
 class BreakIt(Exception): pass
 try:
   with open(ofilename,"w") as ofile:
+      time.sleep(5)
+      omsg = "<6,1>"
+      ser.write(omsg.encode('UTF-8')) 
       while (True):
-        # Getting the incomming bytes
+        # Getting the inicodeng bytes
         inflow = ser.read(ser.in_waiting or 1)
 
         # If any byte, adds it to the buffer. Parses the buffer.
@@ -172,8 +176,8 @@ try:
                 msgSplit=msg.split(",")
                 if msgSplit[0]=='1':
                   t=int(msgSplit[1])*1e-3-delay # reading the time and converting it from ms to s
-                  h=int(trajectory.altitude(t)) # converts the altitude from m to cm
-                  ans = "<1,"+str(h)+">"
+                  h=int(100.0*trajectory.altitude(t)) # converts the altitude from m to cm
+                  ans = "<7,"+str(h)+">"
                   ser.write(ans.encode('UTF-8'))
                 elif msgSplit[0]=='2':
                   rRocketPreviousState = rRocketCurrentState

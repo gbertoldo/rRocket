@@ -1,31 +1,54 @@
+/*
+  The MIT License (MIT)
 
+  Copyright (C) 2022 Guilherme Bertoldo and Jonas Joacir Radtke
+  (UTFPR) Federal University of Technology - Parana
 
-    /**********************************************************************\
-   /          rRocket: An Arduino powered rocketry recovery system          \
-  /            Federal University of Technology - Parana - Brazil            \
-  \              by Guilherme Bertoldo and Jonas Joacir Radtke               /
-   \                       updated September 12, 2022                       /
-    \**********************************************************************/
+  Permission is hereby granted, free of charge, to any person obtaining a 
+  copy of this software and associated documentation files (the “Software”), 
+  to deal in the Software without restriction, including without limitation 
+  the rights to use, copy, modify, merge, publish, distribute, sublicense, 
+  and/or sell copies of the Software, and to permit persons to whom the Software 
+  is furnished to do so, subject to the following conditions:
 
+  The above copyright notice and this permission notice shall be included in all 
+  copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, 
+  WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
+  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+*/
 
 #include "RecoverySystem.h"
-#include "Parameters.h"
-#include "ErrorTable.h"
+#include "ParametersStatic.h"
+#include "ParametersStatic.h"
 
 
-void RecoverySystem::begin()
+void RecoverySystem::begin(bool simulationMode)
 {
-  // Initializing human interface
-  humanInterface.begin();
+  // Simulation mode
+  this->simulationMode = simulationMode;
+  waitingForSimulatedAltitude = false;
 
-  // Show initialization message
-  humanInterface.showInitMessage();
+  pinMode(ParametersStatic::pinLed, OUTPUT);
+  timeOfTheLastMessage = millis();
+  parser.begin();
 
   // Initializing button
-  button.begin(Parameters::pinButton);
+  button.begin(ParametersStatic::pinButton);
 
   // Initializing EEPROM memory
   memory.begin();  
+
+  // Reading flight parameters from permanent memory
+  flightParameters = memory.readFlightParameters();
+
+  // Show initialization message
+  showInitMessage(flightParameters);
 
   /*
     Choose the initial state according to the data in memory.
@@ -45,83 +68,160 @@ void RecoverySystem::begin()
   }
 
   // Initializing the barometer (this module is critical, so its initialization must be garanteed)
-  while ( ! barometer.begin() )
+  if ( ! barometer.begin() )
   {
     // Registering error
     memory.writeErrorLog(error::BarometerInitializationFailure);
-    delay(100);
+    tone(ParametersStatic::pinBuzzer,600);
+    showErrorLog();
+
+    while ( ! barometer.begin() )
+    { 
+      delay(100);
+    }
+    noTone(ParametersStatic::pinBuzzer);
   }
 
   // Initializing the actuator (this module is critical, so its initialization must be garanteed)
-  while ( ! actuator.begin() )
+  if ( ! actuator.begin() ) 
   {
     // Registering error
     memory.writeErrorLog(error::ActuatorInitializationFailure);
-    delay(100);
-  }
+    tone(ParametersStatic::pinBuzzer,600);
+    showErrorLog();
 
-  // Initializing the altitude vector
+    while ( ! actuator.begin() )
+    {
+      delay(100);
+    }
+    noTone(ParametersStatic::pinBuzzer);
+  }
+  
+  // Initializing the time counter for altitude measurements
+  uint32_t t0 = millis();
+  currentStep = ( (int32_t) t0 ) / ( (int32_t) deltaT );
+  flightInitialStep = currentStep;
+  simulationInitialStep = currentStep+N+4;
+
+  // Pre-initializing the remainder elements of the altitude vector
   for ( uint8_t i = 0; i <= N; ++i)
   {
     altitude[i] = 0.0;
   }
-  uint32_t t0 = millis();
+  
   // Giving the registerAltitude method enough time to fully populate the altitude[] vector
-  while ( millis()-t0 < deltaT * (N+3) )
+  while ( currentStep <= flightInitialStep + N )
   {
     // Read the altitude, but do not write it to the memory
-    registerAltitude(false);
+    registerAltitude(0);
+  }
+  delayedWriteIdx = 0; 
+
+  // Initialization finished message
+  showInitFinishedMessage();
+
+  // Given enought time to print the message of initialization finished
+  while ( currentStep <= flightInitialStep + N + 2 )
+  {
+    // Read the altitude, but do not write it to the memory
+    registerAltitude(0);
   }
 }
 
 
 void RecoverySystem::run()
 {
+  // Checks for a new measurement
+  bool hasNewMeasurement = false;
 
   // Recovery system's actions depend on recovery system's state.
   switch (state)
   {
-
     case RecoverySystemState::readyToLaunch:
+     {
+      // Registering altitude without writing it to memory
+      // Writing to memory is performed only after liftoff
+      hasNewMeasurement = registerAltitude(0);
       readyToLaunchRun();
       break;
-
+     }
     case RecoverySystemState::flying:
+    { 
+      // Registering altitude and writing it to memory
+      hasNewMeasurement = registerAltitude(1);
       flyingRun();
       break;
-
+    }
     case RecoverySystemState::drogueChuteActive:
+    {  
+      // Registers altitude and writes it to memory every timeStepScaler
+      hasNewMeasurement = registerAltitude(flightParameters.timeStepScaler);
       drogueChuteActiveRun();
       break;
-
+    }
     case RecoverySystemState::parachuteActive:
+    {  
+      // Registers altitude and writes it to memory every timeStepScaler
+      hasNewMeasurement = registerAltitude(flightParameters.timeStepScaler);
       parachuteActiveRun();
       break;
-
+    }
     case RecoverySystemState::recovered:
+    {
+      // Registering altitude without writing it to memory
+      hasNewMeasurement = registerAltitude(0);
       recoveredRun();
       break;
-
-    default:;
-
+    }
+    default:
+      break;
   }
 
+  // If a new measurement is available and in simulation mode, prints the current state
+  if ( hasNewMeasurement && simulationMode )
+  {
+    Serial.print(F("<"));
+    Serial.print(ocode::simulatedFlightState);
+    Serial.print(F(","));
+    Serial.print((currentStep-simulationInitialStep)*deltaT);
+    Serial.print(F(","));
+    Serial.print((int32_t)(10.0*altitude[N]));
+    Serial.print(F(","));
+    Serial.print((int32_t)(10.0*currentSpeed));
+    Serial.print(F(","));
+    Serial.print((int32_t)(10.0*currentAcceleration));
+    switch (state)
+    {
+    case RecoverySystemState::readyToLaunch:
+      Serial.println(F(",R>"));
+      break;
+    case RecoverySystemState::flying:
+      Serial.println(F(",F>"));
+      break;
+    case RecoverySystemState::drogueChuteActive:
+      Serial.println(F(",D>"));
+      break;
+    case RecoverySystemState::parachuteActive:
+      Serial.println(F(",P>"));
+      break;
+    case RecoverySystemState::recovered:
+      Serial.println(F(",L>"));
+      break;
+    default:
+      break;
+    }
+  }
+  listenForMessages();
 }
 
 
 void RecoverySystem::readyToLaunchRun()
 {
-
-  // Registering altitude without writing to memory
-  // Writing to memory is performed only after liftoff
-  registerAltitude(false);
-
   /*
 
            Scanning for liftoff
 
-  */
-  
+  */ 
   // If flying, stores data to memory and changes recovery system's state
   if ( liftoffCondition > 0 ) {
     changeStateToFlying();    
@@ -129,19 +229,15 @@ void RecoverySystem::readyToLaunchRun()
   else
   {
     // Showing recovery system is ready to launch
-    humanInterface.showReadyToLaunchStatus();
+    showReadyToLaunchStatus();
   }
 }
 
 
 void RecoverySystem::flyingRun()
 {
-
-  // Registering altitude and writing to memory
-  registerAltitude(true);
-
   // Shows to user the flying status
-  humanInterface.showFlyingStatus();
+  showFlyingStatus();
 
   // If rocket is falling, activates drogue chute and changes recovery system's state
   if ( ( apogeeCondition + fallCondition ) > 0 )
@@ -152,29 +248,23 @@ void RecoverySystem::flyingRun()
     // Deploying drogue chute (for now, the stopCondition of the deployment cycle is false)
     actuator.deployDrogueChute(false);
 
+    // Recording the drogue activation event
+    memory.writeEvent('D', (uint16_t)(currentStep-flightInitialStep));
+
     // Changing recovery system's state
     state = RecoverySystemState::drogueChuteActive;
-        
-    // Saving apogee
-    memory.writeApogee( barometer.getApogee() );
-
   }
-
 }
 
 
 void RecoverySystem::drogueChuteActiveRun()
 {
-
-  // Registers altitude and writes to memory
-  registerAltitude(true);
-
   // Asks the actuator to deploy the drogue parachute.
   // After finishing one deployment cycle (turning on and off the drogue pin), the
   // actuator evaluates the stop condition, i.e., the parachute deployment condition OR
   // the number of deployment attempts. 
   bool actuatorFinished = actuator.deployDrogueChute( ( parachuteDeploymentCondition > 0 ) ||
-                                               ( actuator.deployCounter >= Parameters::maxNumberOfDeploymentAttempts ) );
+                                               ( actuator.deployCounter >= flightParameters.maxNumberOfDeploymentAttempts ) );
 
   // If the parachute activation condition is true AND the actuator finished the deployment cycle, 
   // activates parachute and changes the state of the recovery system.
@@ -188,9 +278,11 @@ void RecoverySystem::drogueChuteActiveRun()
     // Deploying the parachute (for now, the stopCondition of the deployment cycle is false)
     actuator.deployParachute(false);
 
+    // Writing parachute activation event to memory 
+    memory.writeEvent('P', (uint16_t)(currentStep-flightInitialStep));
+
     // Changing recovery system's state
     state = RecoverySystemState::parachuteActive;
-
   }
 
 }
@@ -198,15 +290,11 @@ void RecoverySystem::drogueChuteActiveRun()
 
 void RecoverySystem::parachuteActiveRun()
 {
-
-  // Registers altitude and writes to memory
-  registerAltitude(true);
-
   // Asks the actuator to deploy the main parachute.
   // After finishing one deployment cycle (turning on and off the parachute pin), the
   // actuator evaluates the stop condition, i.e., the number of deployment attempts.
   // If the condition is not satisfied, another deployment cycle is started. 
-  actuator.deployParachute( actuator.deployCounter >= Parameters::maxNumberOfDeploymentAttempts );
+  actuator.deployParachute( actuator.deployCounter >= flightParameters.maxNumberOfDeploymentAttempts );
 
   // If rocket is recovered, changes recovery system's state
   if ( landingCondition > 0 )
@@ -217,50 +305,47 @@ void RecoverySystem::parachuteActiveRun()
     // Changing recovery system's state
     state = RecoverySystemState::recovered;
 
+    // Recording the landing event
+    memory.writeEvent('L', (uint16_t)(currentStep-flightInitialStep));
   }
-
 }
 
 
 void RecoverySystem::recoveredRun()
 {
-
-  // Registering altitude without writing to memory
-  registerAltitude(false);
- 
   // If flying, stores data to memory and changes recovery system's state.
   // This condition should not occur in a regular flight. But, if the altimeter resets
   // during the flight, and there is some data stored, the initial state will be 'recovered'.
   // To give the altimeter a chance to open the parachute, the flying condition is monitored.
   // If the condition is fullfiled, the state changes to 'flying'.
   if ( ( liftoffCondition + fallCondition ) > 0 ) {
+    // Erase memory
+    memory.erase();
+
     // Saving the exception
     memory.writeErrorLog(error::FlightStartedWithNonEmptyMemory);
     
     // Changing state
-    changeStateToFlying();  
-  
+    changeStateToFlying();   
   }
   else
   {
-    // Shows to user the recovered status
-    humanInterface.showRecoveredStatus();
-
     // Reading button
     switch (button.getState())
     {
 
       case ButtonState::pressedAndReleased:
-        humanInterface.blinkApogee(memory);
-        humanInterface.showReport(deltaT, memory);
+        blinkApogee(memory);
+        showReport();
         break;
 
       case ButtonState::longPressed:
         // Erasing memory
         memory.erase();
+        showReport();
         
         // Restarting recovery system
-        begin();
+        begin(false);
 
         break;
 
@@ -271,57 +356,81 @@ void RecoverySystem::recoveredRun()
 }
 
 
-void RecoverySystem::registerAltitude(bool writeToMemory)
+bool RecoverySystem::registerAltitude(const uint8_t& scaler)
 {
+  static uint16_t counter = 0;
+  uint32_t currentTime = millis();
+  bool hasNewMeasurement = false;
 
-  static unsigned long int currentStep = 0;
-
-  if (millis() / deltaT > currentStep)
+  if ( currentTime > ((uint32_t) (currentStep * deltaT)))
   {
-    currentStep = currentStep + 1;
+    currentStep++;
+    hasNewMeasurement = true;
 
+    /*
+      Delayed altitude vector recording (see the note about altitude vector delayed record in the header)
+    */ 
+    if ( scaler > 0 ) 
+    {
+      if ( delayedWriteIdx < N ) 
+      {
+        memory.writeAltitude(delayedWriteIdx, altitude[0]);
+        delayedWriteIdx++;
+      }
+    }
+
+    // Shifting the altitude vector and taking another measurement
     for (int i = 0; i < N; i++)
     {
       altitude[i] = altitude[i + 1];
     }
 
-    altitude[N] = barometer.getAltitude();
-
-    if (writeToMemory) memory.appendAltitude(altitude[N]);
-
-    checkFlyEvents();
-
-    #ifdef DEBUGMODE
-    Serial.print("<2,");
-    Serial.print(millis());
-    Serial.print(",");
-    Serial.print(altitude[N]);
-    Serial.print(",");
-    Serial.print(vAverage());
-    switch (state)
+    if ( simulationMode )
     {
-    case RecoverySystemState::readyToLaunch:
-      Serial.print(",R");
-      break;
-    case RecoverySystemState::flying:
-      Serial.print(",F");
-      break;
-    case RecoverySystemState::drogueChuteActive:
-      Serial.print(",D");
-      break;
-    case RecoverySystemState::parachuteActive:
-      Serial.print(",P");
-      break;
-    case RecoverySystemState::recovered:
-      Serial.print(",L");
-      break;
-    default:
-      break;
-    }
-    Serial.println(">");
-    #endif
-  }
+      /* 
+        Requests a simulated altitude for the current instant and
+        waits for the response
+      */
+      waitingForSimulatedAltitude = true;
 
+      Serial.print(F("<"));
+      Serial.print(ocode::requestSimulatedAltitude);
+      Serial.print(F(","));
+      Serial.print((currentStep-simulationInitialStep)*deltaT);
+      //Serial.print(millis());
+      Serial.println(F(">"));
+      while ( waitingForSimulatedAltitude )
+      {
+        listenForMessages();
+      }
+      // If the code of the message is 7, reads the simulated altitude
+      if ( parser.getEntryInt(0) == 7 )
+      {
+        // Converting cm to m
+        altitude[N] = 0.01 * parser.getEntryFloat(1);
+      }
+    }
+    else
+    {
+      altitude[N] = barometer.getAltitude();
+    }
+
+    if ( scaler > 0 ) 
+    {
+      counter++;
+      if ( counter == scaler )
+      {
+        memory.appendAltitude(altitude[N]);
+        counter = 0;
+      }
+    }
+    else
+    {
+      counter = 0;
+    }
+    checkFlyEvents();
+  }
+  return hasNewMeasurement;
 };
 
 
@@ -340,62 +449,67 @@ void RecoverySystem::changeStateToFlying()
     for (int i = 0; i <= N; i++) 
     {
       altitude[i] = altitude[i]-newBaseline;
-      
-      memory.appendAltitude(altitude[i]);
     }
+
+    /*
+      Delayed altitude vector recording (see the note about altitude vector delayed record in the header)
+    */ 
+    delayedWriteIdx = 0;
+    memory.writeAltitude(N,altitude[N]);
 
     // Reloads the actuator
     actuator.reload();
     
     // Changing recovery system's state
     state = RecoverySystemState::flying;
+
+    // Updating the time step when the flight was detected
+    flightInitialStep = currentStep-N;
+
+    // Registering the flight detection
+    memory.writeEvent('F',N);
 }
 
 
-float RecoverySystem::vAverage()
+void RecoverySystem::calculateSpeedAndAcceleration()
 {
-    /*
     // Simple mean
+    static constexpr float spdFactor = 1.0 /(1E-3*(halfN+1)*halfN*deltaT);
+    static constexpr float accFactor = 1.0 /((1E-3*quarN*deltaT)*(1E-3*quarN*deltaT)*(halfN+1));
 
     float sum1 = 0.0;
     float sum2 = 0.0;
+    float sum3 = 0.0;
 
-    for (uint8_t i = 0; i < halfN; ++i)
+    for (uint8_t i = 0; i <= halfN; ++i)
     {
         sum1 += altitude[i];
-        sum2 += altitude[N-i];
+        sum2 += altitude[i+quarN];
+        sum3 += altitude[N-i];
     }
-    return (sum2-sum1)/(1E-3*(halfN+1)*halfN*deltaT);
-    */
-    // Integral based average
-    float sum1 = 0.5*altitude[0];
-    float sum2 = 0.5*altitude[N];
-
-    for (uint8_t i = 1; i < halfN; ++i)
-    {
-        sum1 += altitude[i];
-        sum2 += altitude[N-i];
-    }
-    return (sum2-sum1)/(1E-3*halfN*halfN*deltaT);
+    currentAcceleration = (sum3+sum1-2.0*sum2)*accFactor;   
+    //currentSpeed = (sum3-sum1)*spdFactor;
+    currentSpeed = (3.0*sum3-4.0*sum2+sum1)*spdFactor;
+    return;
 };
 
 
 void RecoverySystem::checkFlyEvents()
 {
     // Calculating the average vertical component of the velocity
-    float vavg = vAverage();
+    calculateSpeedAndAcceleration();
 
     // Ckecking the lift off condition
-    liftoffCondition = (  vavg > Parameters::speedForLiftoffDetection ? 1 : 0 );
+    liftoffCondition = (  currentSpeed > flightParameters.speedForLiftoffDetection ? 1 : 0 );
     
     // Checking the fall condition
-    fallCondition    = ( -vavg > Parameters::speedForFallDetection ? 1 : 0 );
+    fallCondition    = ( -currentSpeed > flightParameters.speedForFallDetection ? 1 : 0 );
     
     // Checking the apogee condition 
-    apogeeCondition  = (  vavg < Parameters::speedForApogeeDetection ? 1 : 0 );
+    apogeeCondition  = (  currentSpeed < flightParameters.speedForApogeeDetection ? 1 : 0 );
     
     // Checking the parachute deployment condition
-    parachuteDeploymentCondition = ( altitude[N] <= Parameters::parachuteDeploymentAltitude ? 1 : 0 );
+    parachuteDeploymentCondition = ( altitude[N] <= flightParameters.parachuteDeploymentAltitude ? 1 : 0 );
 
     // Checking the landing condition
     float ymin=1E5, ymax=-1E5;
@@ -404,5 +518,393 @@ void RecoverySystem::checkFlyEvents()
         if ( altitude[i] < ymin ) ymin = altitude[i];
         if ( altitude[i] > ymax ) ymax = altitude[i];
     }
-    landingCondition = ( ymax-ymin < Parameters::displacementForLandingDetection ? 1 : 0 );
+    landingCondition = ( ymax-ymin < flightParameters.displacementForLandingDetection ? 1 : 0 );
 };
+
+void RecoverySystem::showStaticParameters()
+{
+  Serial.print(F("<"));
+  Serial.print(ocode::firmwareVersion);
+  Serial.print(F(","));
+  Serial.print(ParametersStatic::softwareVersion);
+  Serial.println(F(">"));
+  Serial.print(F("<"));
+  Serial.print(ocode::actuatorDischargeTime);
+  Serial.print(F(","));
+  Serial.print(ParametersStatic::actuatorDischargeTime);
+  Serial.println(F(">"));
+  Serial.print(F("<"));
+  Serial.print(ocode::capacitorRechargeTime);
+  Serial.print(F(","));
+  Serial.print(ParametersStatic::capacitorRechargeTime);
+  Serial.println(F(">"));
+  Serial.print(F("<"));
+  Serial.print(ocode::N);
+  Serial.print(F(","));
+  Serial.print(N);
+  Serial.println(F(">"));
+  Serial.print(F("<"));
+  Serial.print(ocode::deltaT);
+  Serial.print(F(","));
+  Serial.print(deltaT);
+  Serial.println(F(">"));
+}
+
+void RecoverySystem::showDynamicParameters(const FlightParameters& p)
+{
+  Serial.print(F("<"));
+  Serial.print(ocode::simulatedMode);
+  Serial.print(F(","));
+  Serial.print((simulationMode?1:0));
+  Serial.println(F(">"));
+  Serial.print(F("<"));
+  Serial.print(ocode::speedForLiftoffDetection);
+  Serial.print(F(","));
+  Serial.print(p.speedForLiftoffDetection);
+  Serial.println(F(">"));
+  Serial.print(F("<"));
+  Serial.print(ocode::speedForFallDetection);
+  Serial.print(F(","));
+  Serial.print(p.speedForFallDetection);
+  Serial.println(F(">"));
+  Serial.print(F("<"));
+  Serial.print(ocode::speedForApogeeDetection);
+  Serial.print(F(","));
+  Serial.print(p.speedForApogeeDetection);
+  Serial.println(F(">"));
+  Serial.print(F("<"));
+  Serial.print(ocode::parachuteDeploymentAltitude);
+  Serial.print(F(","));
+  Serial.print(p.parachuteDeploymentAltitude);
+  Serial.println(F(">"));
+  Serial.print(F("<"));
+  Serial.print(ocode::displacementForLandingDetection);
+  Serial.print(F(","));
+  Serial.print(p.displacementForLandingDetection);
+  Serial.println(F(">"));
+  Serial.print(F("<"));
+  Serial.print(ocode::maxNumberOfDeploymentAttempts);
+  Serial.print(F(","));
+  Serial.print(p.maxNumberOfDeploymentAttempts);
+  Serial.println(F(">"));
+  Serial.print(F("<"));
+  Serial.print(ocode::timeStepScaler);
+  Serial.print(F(","));
+  Serial.print(p.timeStepScaler);
+  Serial.println(F(">"));
+}
+
+void RecoverySystem::showInitMessage(const FlightParameters& flightParameters)
+{
+  tone(ParametersStatic::pinBuzzer, 4000, 250);
+  Serial.println(F("<"));
+  Serial.println(ocode::startedInitialization);
+  Serial.println(F(">"));
+  showStaticParameters();
+  showDynamicParameters(flightParameters);
+}
+
+
+void RecoverySystem::showInitFinishedMessage()
+{
+  tone(ParametersStatic::pinBuzzer, 4000, 100);
+  Serial.println(F("<"));
+  Serial.println(ocode::finishedInitialization);
+  Serial.println(F(">"));
+}
+
+
+void RecoverySystem::showReadyToLaunchStatus()
+{
+
+  unsigned long currentTime;
+  unsigned long timeStep = 750; // Time step to blink
+
+  currentTime = millis();
+
+  if ( currentTime > 2000 + timeOfTheLastMessage )
+  {
+    timeOfTheLastMessage = currentTime; 
+  }
+
+  if (currentTime % (2 * timeStep) < timeStep)
+  {
+    digitalWrite(ParametersStatic::pinLed, HIGH);
+  }
+  else
+  {
+    digitalWrite(ParametersStatic::pinLed, LOW);
+  }
+
+  if (currentTime % (2 * timeStep) < timeStep / 8)
+  {
+    tone(ParametersStatic::pinBuzzer, 600);
+  }
+  else
+  {
+    noTone(ParametersStatic::pinBuzzer);
+  }
+}
+
+
+void RecoverySystem::showFlyingStatus()
+{
+  digitalWrite(ParametersStatic::pinLed, HIGH);
+  noTone(ParametersStatic::pinBuzzer);
+}
+
+void RecoverySystem::blinkApogee(Memory& memory)
+{
+  int          thousands;
+  int           hundreds;
+  int             dozens;
+  int              units;
+  unsigned int   iHeight;
+  float          fHeight;
+
+  fHeight = memory.readApogee();
+
+  iHeight   = (int)fHeight;
+  thousands = iHeight / 1000;
+  hundreds  = iHeight % 1000;
+  hundreds  = hundreds / 100;
+  dozens    = iHeight % 100;
+  dozens    = dozens / 10;
+  units     = iHeight % 10;
+
+  if (fHeight >= 1000) blinkNumber(thousands);
+
+  if (fHeight >= 100)  blinkNumber(hundreds);
+
+  if (fHeight >= 10)   blinkNumber(dozens);
+
+  blinkNumber(units);
+}
+
+void RecoverySystem::showErrorLog()
+{
+  Serial.print(F("<"));
+  Serial.print(ocode::errorLog);
+  Serial.print(F(","));
+  uint16_t errorLog = memory.readErrorLog();
+  if ( errorLog > 0 ){
+    for (uint8_t i = 0; i < 16; ++i)
+    {
+      /* 
+        If the error is in the log, print it. See the error encode in the ErrorTable.h file.
+      */
+      if ( (errorLog & 2) == 2 )
+      {
+        Serial.print(i+1);
+        Serial.print(F(";"));
+      }
+      errorLog = errorLog >> 1;
+    }
+  }
+  else
+  {
+    Serial.print(F("0"));
+  }
+  Serial.println(F(">"));
+}
+
+
+void RecoverySystem::showReport()
+{
+  Serial.print(F("<"));
+  Serial.print(ocode::stardedSendingMemoryReport);
+  Serial.print(F(">"));
+
+  showErrorLog();
+ 
+  uint16_t drogueSlot = memory.readEvent('D');
+
+  // Flight events
+  if ( memory.getNumberOfSlotsWritten() > 0 ){
+    Serial.print(F("<"));
+    Serial.print(ocode::liftoffEvent);
+    Serial.print(F(","));
+    Serial.print(((int32_t)deltaT)*memory.readEvent('F'));
+    Serial.println(F(">"));
+    Serial.print(F("<"));
+    Serial.print(ocode::drogueEvent);
+    Serial.print(F(","));
+    Serial.print(((int32_t)deltaT)*drogueSlot);
+    Serial.println(F(">"));
+    Serial.print(F("<"));
+    Serial.print(ocode::parachuteEvent);
+    Serial.print(F(","));
+    Serial.print(((int32_t)deltaT)*memory.readEvent('P'));
+    Serial.println(F(">"));
+    Serial.print(F("<"));
+    Serial.print(ocode::landedEvent);
+    Serial.print(F(","));
+    Serial.print(((int32_t)deltaT)*memory.readEvent('L'));
+    Serial.println(F(">"));
+  }
+
+  for ( uint16_t i = 0; i < drogueSlot; ++i)
+  {
+    Serial.print(F("<"));
+    Serial.print(ocode::flightPath);
+    Serial.print(F(","));
+    Serial.print(i * deltaT);
+    Serial.print(F(","));
+    Serial.print((int32_t)(10.0*memory.readAltitude(i))); // m to dm
+    Serial.println(F(">"));
+  }
+
+  int32_t t0 = deltaT * drogueSlot;
+
+  for ( uint16_t i = drogueSlot; i < memory.getNumberOfSlotsWritten(); ++i)
+  {
+    Serial.print(F("<"));
+    Serial.print(ocode::flightPath);
+    Serial.print(F(","));
+    Serial.print(deltaT * flightParameters.timeStepScaler * (i-drogueSlot) + t0 );
+    Serial.print(F(","));
+    Serial.print((int32_t)(10.0*memory.readAltitude(i))); // m to dm
+    Serial.println(F(">"));
+  }
+  Serial.print(F("<"));
+  Serial.print(ocode::finishedSendingMemoryReport);
+  Serial.print(F(">"));
+}
+
+
+void RecoverySystem::blinkNumber(int n)
+{
+
+  int i;
+
+  if (n == 0)
+  {
+    digitalWrite(ParametersStatic::pinLed, LOW);
+    noTone(ParametersStatic::pinBuzzer);
+    delay(300);
+    digitalWrite(ParametersStatic::pinLed, HIGH);
+    tone(ParametersStatic::pinBuzzer, 600);
+    delay(1000);
+    digitalWrite(ParametersStatic::pinLed, LOW);
+    noTone(ParametersStatic::pinBuzzer);
+  }
+
+  for (i = 1; i <= n; i++)
+  {
+    digitalWrite(ParametersStatic::pinLed, LOW);
+    noTone(ParametersStatic::pinBuzzer);
+    delay(300);
+    digitalWrite(ParametersStatic::pinLed, HIGH);
+    tone(ParametersStatic::pinBuzzer, 600);
+    delay(300);
+    digitalWrite(ParametersStatic::pinLed, LOW);
+    noTone(ParametersStatic::pinBuzzer);
+  }
+
+  delay(500);
+
+};
+
+
+void RecoverySystem::listenForMessages()
+{
+  size_t sz = Serial.available();
+  for (size_t i = 0; i < sz; i++) 
+  {
+    parser.append(Serial.read());
+  }
+  if ( parser.hasMessage() )
+  {
+    switch ( parser.getEntryInt(0) )
+    {
+    case icode::readStaticParameters: // Shows static parameters
+    {
+      showStaticParameters();
+      break;
+    }
+    case icode::readDynamicParameters: // Shows flight parameters
+    {
+      showDynamicParameters(flightParameters);
+      break;
+    }
+    case icode::writeDynamicParameters: // Writes flight parameters to permanent memory
+    {
+      memory.writeFlightParameters(flightParameters);
+      memory.erase();
+      showReport();
+      begin(false);
+      break;
+    }
+    case icode::restoreToFactoryParameters: // Clears records of the last flight and saves the parameters of the factory
+    {
+      FlightParameters p; // Creates flight parameters with default values
+      flightParameters = p;
+      memory.writeFlightParameters(p);
+      memory.erase();
+      showReport();
+      begin(false);
+      break;
+    }
+    case icode::clearFlightMemory: // Clears records of the last flight
+    {
+      memory.erase();
+      showReport();
+      begin(false);
+      break;
+    }
+    case icode::readFlightReport: // Shows the report of the last flight
+    {
+      showReport();
+      break;
+    }
+    case icode::setSimulationMode: // Sets the simulation mode (0=off, 1=on)
+    {
+      bool simMode = ( parser.getEntryInt(1) == 1 ? true : false );
+      begin(simMode);
+      break;
+    }
+    case icode::setSimulatedFlightAltitude: // Sets the altitude (m) for the requested instant in the simulation mode
+    {
+      waitingForSimulatedAltitude = false;
+      break;
+    }
+    case icode::setSpeedForLiftoffDetection: // Sets the speed for liftoff detection (m/s)
+    {
+      flightParameters.speedForLiftoffDetection = parser.getEntryInt(1);
+      break;
+    }
+    case icode::setSpeedForFallDetection: // Sets the speed for fall detection (m/s)
+    {
+      flightParameters.speedForFallDetection = parser.getEntryInt(1);
+      break;
+    }
+    case icode::setSpeedForApogeeDetection: // Sets the speed for apogee detection (m/s)
+    {
+      flightParameters.speedForApogeeDetection = parser.getEntryInt(1);
+      break;
+    }
+    case icode::setParachuteDeploymentAltitude: // Sets the altitude to deploy the main parachute (m)
+    {
+      flightParameters.parachuteDeploymentAltitude = parser.getEntryInt(1);
+      break;
+    }
+    case icode::setDisplacementForLandingDetection: // Sets the displacement for landing detection (m)
+    {
+      flightParameters.displacementForLandingDetection = parser.getEntryInt(1);
+      break;
+    }
+    case icode::setMaxNumberOfDeploymentAttempts: // Sets the maximum number of deployment attempts
+    {
+      flightParameters.maxNumberOfDeploymentAttempts = parser.getEntryInt(1);
+      break;
+    }
+    case icode::setTimeStepScaler: // Sets the scaler for adaptive deltaT
+    {
+      flightParameters.timeStepScaler = parser.getEntryInt(1);
+      break;
+    }
+    default:
+      break;
+    }
+  }
+}
