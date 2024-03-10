@@ -150,11 +150,9 @@ float Memory::readApogee()
   float apogee = 0.0;
   float faux = -1E5;
 
-  for (uint16_t i = 0; i < numberOfSlotsWritten; ++i)
+  for (uint16_t i = 0; i < getNumberOfSlotsWritten(); ++i)
   {
-    uint16_t address = 2*i + addrAltitudesBegin;
-
-    faux = readAltitude(address);
+    faux = readAltitude(i);
     if ( faux > apogee ) apogee = faux;
   }
   return apogee;

@@ -32,7 +32,7 @@ struct FlightParameters
 {
   int16_t             speedForLiftoffDetection  {30}; // Speed for liftoff detection (m/s)
   int16_t                speedForFallDetection  {30}; // Speed for fall detection (m/s)
-  int16_t              speedForApogeeDetection   {3}; // Speed for apogee detection (m/s)
+  int16_t              speedForApogeeDetection   {0}; // Speed for apogee detection (m/s)
   int16_t          parachuteDeploymentAltitude {200}; // Altitude to deploy the main parachute (m)
   int16_t      displacementForLandingDetection   {3}; // Displacement for landing detection (meter)
   int16_t        maxNumberOfDeploymentAttempts   {3}; // Maximum number of deployment attempts

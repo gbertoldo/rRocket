@@ -270,7 +270,9 @@ void RecoverySystem::drogueChuteActiveRun()
   // activates parachute and changes the state of the recovery system.
   // The conclusion of the deployment cycle is fundamental to ensure that the capacitor
   // is recharged to the parachute deployment of the next state.
-  if ( actuatorFinished && ( parachuteDeploymentCondition > 0 ) )
+  // Also checks the landing condition. If the actuator finished and the landing condition is valid,
+  // changes the state to the next one (parachuteActive).
+  if ( ( actuatorFinished && ( parachuteDeploymentCondition > 0 ) ) || ( actuatorFinished && ( landingCondition > 0 ) ) )
   {
     // Reloads the actuator (restarts the deploy counter etc...)
     actuator.reload();
@@ -397,6 +399,7 @@ bool RecoverySystem::registerAltitude(const uint8_t& scaler)
       Serial.print(ocode::requestSimulatedAltitude);
       Serial.print(F(","));
       Serial.print((currentStep-simulationInitialStep)*deltaT);
+      //Serial.print((int32_t)currentTime-(int32_t)(simulationInitialStep*deltaT));
       //Serial.print(millis());
       Serial.println(F(">"));
       while ( waitingForSimulatedAltitude )
@@ -437,19 +440,19 @@ bool RecoverySystem::registerAltitude(const uint8_t& scaler)
 void RecoverySystem::changeStateToFlying()
 {
     // Storing data to memory using the corrected altitude
-    float newBaseline = altitude[0];
+    //float newBaseline = altitude[0];
 
     // Setting barometer new baseline
-    barometer.setBaseline(newBaseline);
+    //barometer.setBaseline(newBaseline);
     /* 
       Why resetting the barometer height baseline? If altimeter stays switched on for a long time, environment pressure
       and temperature may change and, hence, change local baseline height. To avoid this problem, it is necessary to 
       reset the barometer height baseline when liftoff is detected.
     */
-    for (int i = 0; i <= N; i++) 
-    {
-      altitude[i] = altitude[i]-newBaseline;
-    }
+    //for (int i = 0; i <= N; i++) 
+    //{
+    //  altitude[i] = altitude[i]-newBaseline;
+    //}
 
     /*
       Delayed altitude vector recording (see the note about altitude vector delayed record in the header)
@@ -473,10 +476,10 @@ void RecoverySystem::changeStateToFlying()
 
 void RecoverySystem::calculateSpeedAndAcceleration()
 {
-    // Simple mean
-    static constexpr float spdFactor = 1.0 /(1E-3*(halfN+1)*halfN*deltaT);
     static constexpr float accFactor = 1.0 /((1E-3*quarN*deltaT)*(1E-3*quarN*deltaT)*(halfN+1));
-
+    static constexpr float spdFactor = 1.0 /(1E-3*(halfN+1)*halfN*deltaT);
+    static constexpr float spdCorFactor = 1.E-3*deltaT*quarN;
+    
     float sum1 = 0.0;
     float sum2 = 0.0;
     float sum3 = 0.0;
@@ -487,9 +490,16 @@ void RecoverySystem::calculateSpeedAndAcceleration()
         sum2 += altitude[i+quarN];
         sum3 += altitude[N-i];
     }
-    currentAcceleration = (sum3+sum1-2.0*sum2)*accFactor;   
-    //currentSpeed = (sum3-sum1)*spdFactor;
-    currentSpeed = (3.0*sum3-4.0*sum2+sum1)*spdFactor;
+    currentAcceleration = (sum3+sum1-2.0*sum2)*accFactor; // Acceleration using central differencing scheme (shifted in time halfN*deltaT)
+    
+    // Backward differencing scheme
+    currentSpeed = (3.0*sum3-4.0*sum2+sum1)*spdFactor; // Speed using backward differencing scheme (shifted in time quarN*deltaT )
+    currentSpeed = currentSpeed + currentAcceleration * spdCorFactor; // Corrected speed (no time shift)
+    
+    // Central differencing scheme
+    // currentSpeed = (sum3-sum1)*spdFactor; // Speed using central differencing scheme (shifted in time quarN*deltaT )
+    // currentSpeed = currentSpeed + currentAcceleration * 2.0 * spdCorFactor; // Corrected speed (no time shift)
+
     return;
 };
 
@@ -718,6 +728,7 @@ void RecoverySystem::showReport()
   showErrorLog();
  
   uint16_t drogueSlot = memory.readEvent('D');
+  int32_t landingInstant = ((int32_t)deltaT)*memory.readEvent('L');
 
   // Flight events
   if ( memory.getNumberOfSlotsWritten() > 0 ){
@@ -739,32 +750,50 @@ void RecoverySystem::showReport()
     Serial.print(F("<"));
     Serial.print(ocode::landedEvent);
     Serial.print(F(","));
-    Serial.print(((int32_t)deltaT)*memory.readEvent('L'));
+    Serial.print(landingInstant);
     Serial.println(F(">"));
-  }
+  
 
-  for ( uint16_t i = 0; i < drogueSlot; ++i)
-  {
-    Serial.print(F("<"));
-    Serial.print(ocode::flightPath);
-    Serial.print(F(","));
-    Serial.print(i * deltaT);
-    Serial.print(F(","));
-    Serial.print((int32_t)(10.0*memory.readAltitude(i))); // m to dm
-    Serial.println(F(">"));
-  }
+    for ( uint16_t i = 0; i < drogueSlot; ++i)
+    {
+      Serial.print(F("<"));
+      Serial.print(ocode::flightPath);
+      Serial.print(F(","));
+      Serial.print(i * deltaT);
+      Serial.print(F(","));
+      Serial.print((int32_t)(10.0*memory.readAltitude(i))); // m to dm
+      Serial.println(F(">"));
+    }
 
-  int32_t t0 = deltaT * drogueSlot;
+    int32_t t0 = deltaT * drogueSlot;
+    int32_t t;
+    int32_t h;
 
-  for ( uint16_t i = drogueSlot; i < memory.getNumberOfSlotsWritten(); ++i)
-  {
-    Serial.print(F("<"));
-    Serial.print(ocode::flightPath);
-    Serial.print(F(","));
-    Serial.print(deltaT * flightParameters.timeStepScaler * (i-drogueSlot) + t0 );
-    Serial.print(F(","));
-    Serial.print((int32_t)(10.0*memory.readAltitude(i))); // m to dm
-    Serial.println(F(">"));
+    for ( uint16_t i = drogueSlot; i < memory.getNumberOfSlotsWritten(); ++i)
+    {
+      t = (int32_t)(deltaT) * (int32_t)(flightParameters.timeStepScaler) * (i-drogueSlot) + t0;
+      h = (int32_t)(10.0*memory.readAltitude(i)); // m to dm
+      Serial.print(F("<"));
+      Serial.print(ocode::flightPath);
+      Serial.print(F(","));
+      Serial.print(t);
+      Serial.print(F(","));
+      Serial.print(h);
+      Serial.println(F(">"));
+    }
+
+    if ( t < landingInstant )
+    {
+      t = landingInstant;
+      Serial.print(F("<"));
+      Serial.print(ocode::flightPath);
+      Serial.print(F(","));
+      Serial.print(t);
+      Serial.print(F(","));
+      Serial.print(h); 
+      Serial.println(F(">"));
+    }
+
   }
   Serial.print(F("<"));
   Serial.print(ocode::finishedSendingMemoryReport);
