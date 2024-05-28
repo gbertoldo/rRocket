@@ -34,6 +34,7 @@
 #include "ParametersStatic.h"
 #include "ParametersDynamic.h"
 #include "MessageParser.h"
+#include "KalmanFilterFlightStatisticsOpt3.h"
 
 /*
 
@@ -138,7 +139,7 @@ class RecoverySystem
       of the vertical position. The results are stored
       in the variables currentSpeed and currentAcceleration.
     */
-    void calculateSpeedAndAcceleration();
+    //void calculateSpeedAndAcceleration();
 
     /*
       Checks for the conditions of the following events:
@@ -224,6 +225,9 @@ class RecoverySystem
 
     // Input message parser
     MessageParser parser;
+
+    // Kalman Filter
+    KalmanFilterFlightStatistics kalmanFilter;
 };
 
 #endif // RECOVERYSYSTEM_H

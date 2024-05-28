@@ -67,6 +67,9 @@ void RecoverySystem::begin(bool simulationMode)
     state = RecoverySystemState::readyToLaunch;
   }
 
+  // Initializing the Kalman filter
+  kalmanFilter.begin(ParametersStatic::deltaT*1E-3, 2.0, 5.0, 0.1);
+
   // Initializing the barometer (this module is critical, so its initialization must be garanteed)
   if ( ! barometer.begin() )
   {
@@ -418,6 +421,9 @@ bool RecoverySystem::registerAltitude(const uint8_t& scaler)
       altitude[N] = barometer.getAltitude();
     }
 
+    // Updating the Kalman filter
+    kalmanFilter.process(altitude[N]);
+
     if ( scaler > 0 ) 
     {
       counter++;
@@ -473,7 +479,7 @@ void RecoverySystem::changeStateToFlying()
     memory.writeEvent('F',N);
 }
 
-
+/*
 void RecoverySystem::calculateSpeedAndAcceleration()
 {
     static constexpr float accFactor = 1.0 /((1E-3*quarN*deltaT)*(1E-3*quarN*deltaT)*(halfN+1));
@@ -502,12 +508,14 @@ void RecoverySystem::calculateSpeedAndAcceleration()
 
     return;
 };
-
+*/
 
 void RecoverySystem::checkFlyEvents()
 {
     // Calculating the average vertical component of the velocity
-    calculateSpeedAndAcceleration();
+    //calculateSpeedAndAcceleration();
+    currentSpeed = kalmanFilter.v;
+    currentAcceleration = kalmanFilter.a;
 
     // Ckecking the lift off condition
     liftoffCondition = (  currentSpeed > flightParameters.speedForLiftoffDetection ? 1 : 0 );
