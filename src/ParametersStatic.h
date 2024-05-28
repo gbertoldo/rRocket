@@ -29,7 +29,7 @@
 
 namespace ParametersStatic
 {
-  static constexpr char                 softwareVersion[] {"1.6.1-KF"}; // Version of this software
+  static constexpr char              softwareVersion[] {"1.6.2-KF"}; // Version of this software
   static constexpr int                                 pinLed  {13}; // Screen uses pin 13 to blink Arduino internal led
   static constexpr int                              pinBuzzer  {11}; // Pin of buzzer
   static constexpr int                              pinButton  {10}; // Pin of button

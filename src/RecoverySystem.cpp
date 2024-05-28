@@ -530,13 +530,19 @@ void RecoverySystem::checkFlyEvents()
     parachuteDeploymentCondition = ( altitude[N] <= flightParameters.parachuteDeploymentAltitude ? 1 : 0 );
 
     // Checking the landing condition
-    float ymin=1E5, ymax=-1E5;
-    for (uint8_t i = 0; i < N+1; ++i)
-    {
-        if ( altitude[i] < ymin ) ymin = altitude[i];
-        if ( altitude[i] > ymax ) ymax = altitude[i];
+    if ( liftoffCondition || fallCondition )
+    { 
+      landingCondition = 0;
     }
-    landingCondition = ( ymax-ymin < flightParameters.displacementForLandingDetection ? 1 : 0 );
+    else{
+      float ymin=1E5, ymax=-1E5;
+      for (uint8_t i = 0; i < N+1; ++i)
+      {
+          if ( altitude[i] < ymin ) ymin = altitude[i];
+          if ( altitude[i] > ymax ) ymax = altitude[i];
+      }
+      landingCondition = ( ymax-ymin < flightParameters.displacementForLandingDetection ? 1 : 0 );
+    }
 };
 
 void RecoverySystem::showStaticParameters()
