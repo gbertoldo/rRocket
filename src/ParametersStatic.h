@@ -29,7 +29,7 @@
 
 namespace ParametersStatic
 {
-  static constexpr char              softwareVersion[] {"1.6.2-KF"}; // Version of this software
+  static constexpr char                 softwareVersion[] {"1.7.0"}; // Version of this software
   static constexpr int                                 pinLed  {13}; // Screen uses pin 13 to blink Arduino internal led
   static constexpr int                              pinBuzzer  {11}; // Pin of buzzer
   static constexpr int                              pinButton  {10}; // Pin of button
@@ -37,8 +37,12 @@ namespace ParametersStatic
   static constexpr int                           pinParachute   {3}; // Pin to trigger the main recovery system (at parachuteDeploymentAltitude)
   static constexpr uint32_t             actuatorDischargeTime {500}; // Time to discharge the capacitor of the actuator to deploy the parachute and the drogue (milliseconds)
   static constexpr uint32_t            capacitorRechargeTime {1000}; // Time to recharge the capacitor of the actuator (milliseconds)
-  static constexpr uint8_t                                  N  {32}; // Number of time steps to calculate the flight statistics (must be a multiple of 4)
+  static constexpr uint8_t                                  N  {32}; // Number of altitude measurements stored during the flight (must be a multiple of 4)
   static constexpr uint16_t                            deltaT {100}; // Time step between measurements (ms)
+  static constexpr float                               kfStdExp {2}; // Standard deviation of altitude measurements (m)
+  static constexpr float                           kfStdModSub {32}; // Standard deviation of Kalman filter model for subsonic flow (m/s3)
+  static constexpr float                          kfStdModTra {0.1}; // Standard deviation of Kalman filter model for transonic flow (m/s3)
+  static constexpr float                            kfdadt_ref {32}; // Parameter of Alpha filter(m/s3)
 }
 
 
@@ -123,6 +127,10 @@ namespace ocode
   static constexpr uint8_t displacementForLandingDetection {22};
   static constexpr uint8_t maxNumberOfDeploymentAttempts   {23};
   static constexpr uint8_t timeStepScaler                  {24};
-}
+  static constexpr uint8_t kfStdExp                        {25};
+  static constexpr uint8_t kfStdModSub                     {26};
+  static constexpr uint8_t kfStdModTra                     {27};
+  static constexpr uint8_t kfDadt_ref                      {28};
+} 
 
 #endif // PARAMETERSSTATIC_H

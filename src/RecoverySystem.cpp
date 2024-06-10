@@ -67,9 +67,6 @@ void RecoverySystem::begin(bool simulationMode)
     state = RecoverySystemState::readyToLaunch;
   }
 
-  // Initializing the Kalman filter
-  kalmanFilter.begin(ParametersStatic::deltaT*1E-3, 2.0, 5.0, 0.1);
-
   // Initializing the barometer (this module is critical, so its initialization must be garanteed)
   if ( ! barometer.begin() )
   {
@@ -112,6 +109,14 @@ void RecoverySystem::begin(bool simulationMode)
     altitude[i] = 0.0;
   }
   
+  // Initializing the Kalman filter
+  kalmanFilter.begin(getAltitude(), 
+    ParametersStatic::deltaT*1E-3, 
+    ParametersStatic::kfStdExp, 
+    ParametersStatic::kfStdModSub, 
+    ParametersStatic::kfStdModTra, 
+    ParametersStatic::kfdadt_ref);
+
   // Giving the registerAltitude method enough time to fully populate the altitude[] vector
   while ( currentStep <= flightInitialStep + N )
   {
@@ -360,6 +365,36 @@ void RecoverySystem::recoveredRun()
   }
 }
 
+float RecoverySystem::getAltitude()
+{
+    if ( simulationMode )
+    {
+      /* 
+        Requests a simulated altitude for the current instant and
+        waits for the response
+      */
+      waitingForSimulatedAltitude = true;
+
+      Serial.print(F("<"));
+      Serial.print(ocode::requestSimulatedAltitude);
+      Serial.print(F(","));
+      Serial.print((currentStep-simulationInitialStep)*deltaT);
+      //Serial.print((int32_t)currentTime-(int32_t)(simulationInitialStep*deltaT));
+      //Serial.print(millis());
+      Serial.println(F(">"));
+      while ( waitingForSimulatedAltitude )
+      {
+        listenForMessages();
+      }
+      // If the code of the message is 7, reads the simulated altitude
+      if ( parser.getEntryInt(0) == 7 )
+      {
+        // Converting cm to m
+        return 0.01 * parser.getEntryFloat(1);
+      }
+    }
+  return barometer.getAltitude();
+}
 
 bool RecoverySystem::registerAltitude(const uint8_t& scaler)
 {
@@ -390,36 +425,8 @@ bool RecoverySystem::registerAltitude(const uint8_t& scaler)
       altitude[i] = altitude[i + 1];
     }
 
-    if ( simulationMode )
-    {
-      /* 
-        Requests a simulated altitude for the current instant and
-        waits for the response
-      */
-      waitingForSimulatedAltitude = true;
-
-      Serial.print(F("<"));
-      Serial.print(ocode::requestSimulatedAltitude);
-      Serial.print(F(","));
-      Serial.print((currentStep-simulationInitialStep)*deltaT);
-      //Serial.print((int32_t)currentTime-(int32_t)(simulationInitialStep*deltaT));
-      //Serial.print(millis());
-      Serial.println(F(">"));
-      while ( waitingForSimulatedAltitude )
-      {
-        listenForMessages();
-      }
-      // If the code of the message is 7, reads the simulated altitude
-      if ( parser.getEntryInt(0) == 7 )
-      {
-        // Converting cm to m
-        altitude[N] = 0.01 * parser.getEntryFloat(1);
-      }
-    }
-    else
-    {
-      altitude[N] = barometer.getAltitude();
-    }
+    // Reading the current altitude
+    altitude[N] = getAltitude();
 
     // Updating the Kalman filter
     kalmanFilter.process(altitude[N]);
@@ -514,7 +521,7 @@ void RecoverySystem::checkFlyEvents()
 {
     // Calculating the average vertical component of the velocity
     //calculateSpeedAndAcceleration();
-    currentSpeed = kalmanFilter.v;
+    currentSpeed = kalmanFilter.vs; // Uses the smoothed velocity vs instead of v
     currentAcceleration = kalmanFilter.a;
 
     // Ckecking the lift off condition
@@ -571,6 +578,28 @@ void RecoverySystem::showStaticParameters()
   Serial.print(ocode::deltaT);
   Serial.print(F(","));
   Serial.print(deltaT);
+  Serial.println(F(">"));
+
+  // Kalman filter parameters
+  Serial.print(F("<"));
+  Serial.print(ocode::kfStdExp);
+  Serial.print(F(","));
+  Serial.print(ParametersStatic::kfStdExp);
+  Serial.println(F(">"));
+  Serial.print(F("<"));
+  Serial.print(ocode::kfStdModSub);
+  Serial.print(F(","));
+  Serial.print(ParametersStatic::kfStdModSub);
+  Serial.println(F(">"));
+  Serial.print(F("<"));
+  Serial.print(ocode::kfStdModTra);
+  Serial.print(F(","));
+  Serial.print(ParametersStatic::kfStdModTra);
+  Serial.println(F(">"));
+  Serial.print(F("<"));
+  Serial.print(ocode::kfDadt_ref);
+  Serial.print(F(","));
+  Serial.print(ParametersStatic::kfdadt_ref);
   Serial.println(F(">"));
 }
 

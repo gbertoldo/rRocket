@@ -1,21 +1,46 @@
-#include "KalmanFilterFlightStatisticsOpt3.h"
+/*
+  The MIT License (MIT)
 
-void KalmanFilterFlightStatistics::begin(float dT, float stdExp, float stdModSub, float stdModTra)
+  Copyright (C) 2022 Guilherme Bertoldo and Jonas Joacir Radtke
+  (UTFPR) Federal University of Technology - Parana
+
+  Permission is hereby granted, free of charge, to any person obtaining a 
+  copy of this software and associated documentation files (the “Software”), 
+  to deal in the Software without restriction, including without limitation 
+  the rights to use, copy, modify, merge, publish, distribute, sublicense, 
+  and/or sell copies of the Software, and to permit persons to whom the Software 
+  is furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in all 
+  copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, 
+  WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
+  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+*/
+
+#include "KalmanAlphaFilterFlightStatistics.h"
+#include <math.h>
+
+void KalmanAlphaFilterFlightStatistics::begin(float s0, float dT, float stdExp, float stdModSub, float stdModTra, float dadt_ref)
 {
   T    =              dT; // Time step
   T2   =       dT*dT*0.5; // Auxiliary variable
   Vexp = stdExp * stdExp; // Variance of the measurements
   VmodSub = stdModSub * stdModSub; // Variance of the physical model for subsonic speed
   VmodTra = stdModTra * stdModTra; // Variance of the physical model for subsonic speed
-  reset();
-};
 
+  da_ref_inv = 1.0 / ( dadt_ref * T);
 
-void KalmanFilterFlightStatistics::reset()
-{
-  s=0.0;
+  s=s0;
   v=0.0;
   a=0.0;
+
+  vs = v;
   
   Vmod = VmodSub;
   
@@ -32,7 +57,7 @@ void KalmanFilterFlightStatistics::reset()
 }
 
 
-void KalmanFilterFlightStatistics::process(const float& sMeasured)
+void KalmanAlphaFilterFlightStatistics::process(const float& sMeasured)
 {
   /****************************
       Prediction step
@@ -40,6 +65,8 @@ void KalmanFilterFlightStatistics::process(const float& sMeasured)
   s += v*T + a*T2;
   v +=       a*T;
   //a = a;
+  float a0 = a;
+
   if ( v > 170 )
   {
     Vmod = VmodTra;
@@ -86,4 +113,7 @@ void KalmanFilterFlightStatistics::process(const float& sMeasured)
   P11 = Ph11-K1*Ph01;
   P12 = Ph12-K1*Ph02;
   P22 = Ph22-K2*Ph02;
+
+  // Alpha filter
+  vs += (v-vs)/(1.0+fabs(a-a0)*da_ref_inv);
 };

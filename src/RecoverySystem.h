@@ -34,7 +34,7 @@
 #include "ParametersStatic.h"
 #include "ParametersDynamic.h"
 #include "MessageParser.h"
-#include "KalmanFilterFlightStatisticsOpt3.h"
+#include "KalmanAlphaFilterFlightStatistics.h"
 
 /*
 
@@ -118,6 +118,12 @@ class RecoverySystem
     void drogueChuteActiveRun();
     void   parachuteActiveRun();
     void         recoveredRun();
+
+
+    /*
+      Reads the current altitude
+    */
+    float getAltitude();
 
     /* 
       Updates altitude vector and writes data to permanent memory
@@ -227,7 +233,7 @@ class RecoverySystem
     MessageParser parser;
 
     // Kalman Filter
-    KalmanFilterFlightStatistics kalmanFilter;
+    KalmanAlphaFilterFlightStatistics kalmanFilter;
 };
 
 #endif // RECOVERYSYSTEM_H
