@@ -770,7 +770,9 @@ void RecoverySystem::showReport()
 
   showErrorLog();
  
-  uint16_t drogueSlot = memory.readEvent('D');
+  // Slot up to which data is written with higher frequency 
+  uint16_t hfSlot = min(memory.readEvent('D'), memory.getNumberOfSlotsWritten());
+
   int32_t landingInstant = ((int32_t)deltaT)*memory.readEvent('L');
 
   // Flight events
@@ -783,7 +785,7 @@ void RecoverySystem::showReport()
     Serial.print(F("<"));
     Serial.print(ocode::drogueEvent);
     Serial.print(F(","));
-    Serial.print(((int32_t)deltaT)*drogueSlot);
+    Serial.print(((int32_t)deltaT)*memory.readEvent('D'));
     Serial.println(F(">"));
     Serial.print(F("<"));
     Serial.print(ocode::parachuteEvent);
@@ -796,44 +798,29 @@ void RecoverySystem::showReport()
     Serial.print(landingInstant);
     Serial.println(F(">"));
   
-
-    for ( uint16_t i = 0; i < drogueSlot; ++i)
-    {
-      Serial.print(F("<"));
-      Serial.print(ocode::flightPath);
-      Serial.print(F(","));
-      Serial.print(i * deltaT);
-      Serial.print(F(","));
-      Serial.print((int32_t)(10.0*memory.readAltitude(i))); // m to dm
-      Serial.println(F(">"));
-    }
-
-    int32_t t0 = deltaT * drogueSlot;
+    int32_t t0 = deltaT * hfSlot;
     int32_t t;
     int32_t h;
-
-    for ( uint16_t i = drogueSlot; i < memory.getNumberOfSlotsWritten(); ++i)
+    
+    for ( uint16_t i = 0; i < memory.getNumberOfSlotsWritten(); ++i)
     {
-      t = (int32_t)(deltaT) * (int32_t)(flightParameters.timeStepScaler) * (i-drogueSlot) + t0;
+      if ( i > hfSlot )
+      {
+        t = (int32_t)(deltaT) * (int32_t)(flightParameters.timeStepScaler) * (i-hfSlot) + t0;
+      }
+      else
+      {
+        t = i * deltaT;
+      }
+
       h = (int32_t)(10.0*memory.readAltitude(i)); // m to dm
+
       Serial.print(F("<"));
       Serial.print(ocode::flightPath);
       Serial.print(F(","));
       Serial.print(t);
       Serial.print(F(","));
       Serial.print(h);
-      Serial.println(F(">"));
-    }
-
-    if ( t < landingInstant )
-    {
-      t = landingInstant;
-      Serial.print(F("<"));
-      Serial.print(ocode::flightPath);
-      Serial.print(F(","));
-      Serial.print(t);
-      Serial.print(F(","));
-      Serial.print(h); 
       Serial.println(F(">"));
     }
 
