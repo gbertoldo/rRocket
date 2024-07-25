@@ -24,9 +24,15 @@ Como qualquer sistema eletrônico, o rRocket não é infalível. Deste modo, é 
 # Hardware
 Desenvolvido com o propósito de redução de custos, o hardware do rRocket é formado por componentes eletrônicos facilmente disponíveis no mercado. Em função disso, o computador de bordo pode ser montado por qualquer pessoa com conhecimento básico de soldagem. A figura abaixo ilustra a PCI (placa de circuito impresso) do rRocket modelo EZ, ou, simplesmente, rRocket-EZ, e a figura seguinte ilustra um rRocket-EZ montado. 
 
+<center>
 <picture>
 <img src="https://github.com/user-attachments/assets/2dbd04f5-d6ca-4f60-9fca-387c09d1a4e5" width="300" />
 </picture>
+<br /> 
+<picture>
+<img src="https://github.com/user-attachments/assets/a2601c7f-ad41-4994-97f1-a8c8428a86c2" width="300" />
+</picture>
+</center>
 
 Lista completa de componentes
 -----------------------------
@@ -76,5 +82,6 @@ Caso estas condições não sejam observadas, o dispositivo não deve ser utiliz
 
 Observação: antes da liberação de uma nova versão do rRocket, o dispositivo é submetido a testes simulados com todos os voos reais e fabricados disponíveis na interface gráfica. A versão é disponibilizada apenas se as condições acima forem satisfeitas.
 
-
 ## Experimentos de bancada
+
+Os experimentos de bancada visam avaliar a integridade de _hardware_ e a sua integração com o _software_. Para isso, é necessário utilizar um ambiente onde seja possível controlar a pressão, uma vez que o sensor de altura  é barométrico, e monitorar as tensões da bateria e dos terminais de acionamento de paraquedas. Além disso, deve ser possível acionar ignitores ligados ao rRocket, mas localizados externamente ao ambiente de pressão controlada.
