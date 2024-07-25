@@ -72,6 +72,9 @@ O primeiro tipo de testes envolve simulação de voos utilizando a interface gr�
 3. Acionar o paraquedas principal na altura configurada
 4. Detectar o pouso
    
-Caso estas condições não sejam observadas, o dispositivo não deve ser utilizado.
+Caso estas condições não sejam observadas, o dispositivo não deve ser utilizado. Por gentileza, [comunique-nos](https://github.com/gbertoldo/rRocket/issues) a falha.
+
+Observação: antes da liberação de uma nova versão do rRocket, o dispositivo é submetido a testes simulados com todos os voos reais e fabricados disponíveis na interface gráfica. A versão é disponibilizada apenas se as condições acima forem satisfeitas.
+
 
 ## Experimentos de bancada
