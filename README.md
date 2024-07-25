@@ -19,7 +19,7 @@ Como qualquer sistema eletrônico, o rRocket não é infalível. Deste modo, é 
 # Hardware
 Desenvolvido com o propósito de estímulo à educação aeroespacial e redução de custos, o hardware do rRocket é composto por uma placa de circuito impresso (PCI) pode ser adquirida diretamente pelo SITE e por componentes eletrônicos facilmente disponíveis no mercado. Em função disso, o computador de bordo pode ser montado por qualquer pessoa com conhecimento básico de soldagem. A figura abaixo ilustra 
 <center>
-![](./doc/v1.0.0/Fig/r.png)
+![](./doc/Fig/pci-top.png)
 Placa de circuito impresso (PCI) do rRocket.
 </center>
 # Software
