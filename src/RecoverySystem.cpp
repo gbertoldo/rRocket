@@ -702,7 +702,7 @@ void RecoverySystem::showReadyToLaunchStatus()
 
 void RecoverySystem::showFlyingStatus()
 {
-  digitalWrite(ParametersStatic::pinLed, HIGH);
+  digitalWrite(ParametersStatic::pinLed, LOW);
   noTone(ParametersStatic::pinBuzzer);
 }
 

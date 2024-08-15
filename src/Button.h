@@ -22,19 +22,21 @@
   CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 */
+
 #ifndef BUTTON_H
 #define BUTTON_H
 
+
 /*
   Button states
-              released: at time button state was read, it was released 
+              released: at time button state was read, it was released
                pressed: at time button state was read, it was pressed by a time less than refTime (user defined reference time)
     pressedAndReleased: at time button state was read, it was released after had been pressed by a time less than refTime (user defined reference time)
            longPressed: at time button state was read, it was pressed by a time greater or equal to refTime (user defined reference time)
-*/ 
+*/
+
 
 enum class ButtonState {released, pressed, pressedAndReleased, longPressed};
-
 
 
 /*
@@ -46,34 +48,31 @@ enum class ButtonState {released, pressed, pressedAndReleased, longPressed};
 class Button
 {
 
-    public:
-        // Initializes
-        bool begin(unsigned short pin, unsigned long int refTime = 1500);
+  public:
 
-        // Returns the button state
-        ButtonState getState();
+    // Initializes
+    bool begin(unsigned short pin, unsigned long int refTime = 1500);
 
-    private:
+    // Returns the button state
+    ButtonState getState();
 
-        // Defines on and off
-        uint8_t  ON  {LOW}; // pressed
-        uint8_t OFF {HIGH}; // released
+  private:
 
-        // Arduino pin associated to the button
-        unsigned short pin;
+    // Arduino pin associated to the button
+    unsigned short pin;
 
-        // Reference time to long pressed button state (milliseconds)
-        unsigned long int refTime {1500};
+    // Reference time to long pressed button state (milliseconds)
+    unsigned long int refTime {1500};
 
-        // Previous button state (pressed=ON or released=OFF)
-        unsigned short pstate{OFF};
-        
-        // Current button state (pressed=ON or released=OFF)
-        unsigned short cstate{OFF};
+    // Previous button state (pressed=1 or released=0)
+    unsigned short pstate{0};
 
-        // Stores the time when button was first pressed after a release
-        unsigned long int T0;
-          
+    // Current button state (pressed=1 or released=0)
+    unsigned short cstate{0};
+
+    // Stores the time when button was first pressed after a release
+    unsigned long int T0;
+
 };
 
 #endif // BUTTON_H

@@ -22,90 +22,103 @@
   CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 */
+
 #include "Arduino.h"
 #include "Button.h"
 
 bool Button::begin(unsigned short pin, unsigned long int refTime)
 {
 
-  pinMode(pin, INPUT_PULLUP);
+  pinMode(pin, INPUT);
 
   this->pin = pin;
 
   this->refTime = refTime;
-  
+
   return true;
 }
 
 
 ButtonState Button::getState()
-{ 
+{
 
-    // Reading the current pin state (pressed=ON or released=OFF)
-    cstate = digitalRead(pin);
+  // Reading the current pin state (pressed=1 or released=0)
+  cstate = digitalRead(pin);
 
-    // If button is currently realeased
-    if ( cstate == OFF ) {
+  // If button is currently realeased
+  if ( cstate == 0 )
+  {
 
-        // If button was released before
-        if ( pstate == OFF ) {
+    // If button was released before
+    if ( pstate == 0 )
+    {
 
-            pstate = cstate;
+      pstate = cstate;
 
-            return ButtonState::released;
-            
-        } 
-        // If button was pressed before
-        else 
-        {
-        
-            pstate = cstate;
+      return ButtonState::released;
 
-            unsigned long int T1 = millis()-T0;
-
-            // If short pressed
-            if ( 5 < T1 && T1 < refTime ) {
-
-                return ButtonState::pressedAndReleased;
-              
-            }
-            else
-            {
-                return ButtonState::released;
-            }               
-        }
     }
-    // If button is currently pressed
+    // If button was pressed before
     else
     {
-        // If button was released before
-        if ( pstate == OFF ) {
 
-            pstate = cstate;
+      pstate = cstate;
 
-            T0 = millis();
+      unsigned long int T1 = millis() - T0;
 
-            return ButtonState::pressed;
-            
-        } 
-        // If button was pressed before
-        else 
-        {
-        
-            pstate = cstate;
+      // If short pressed
+      if ( 5 < T1 && T1 < refTime )
+      {
 
-            if ( (millis()-T0) >= refTime ) {
+        return ButtonState::pressedAndReleased;
 
-                return ButtonState::longPressed;
-              
-            }
-            else
-            {
-                return ButtonState::pressed;
-            }
-                            
-        }
-        
+      }
+      else
+      {
+
+        return ButtonState::released;
+
+      }
+
     }
-  
+
+  }
+  // If button is currently pressed
+  else
+  {
+
+    // If button was released before
+    if ( pstate == 0 )
+    {
+
+      pstate = cstate;
+
+      T0 = millis();
+
+      return ButtonState::pressed;
+
+    }
+    // If button was pressed before
+    else
+    {
+
+      pstate = cstate;
+
+      if ( (millis() - T0) >= refTime )
+      {
+
+        return ButtonState::longPressed;
+
+      }
+      else
+      {
+
+        return ButtonState::pressed;
+
+      }
+
+    }
+
+  }
+
 };
