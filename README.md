@@ -86,4 +86,22 @@ Observação: antes da liberação de uma nova versão do rRocket, o dispositivo
 
 Os experimentos de bancada visam avaliar a integridade de _hardware_ e a sua integração com o _software_. Para isso, é necessário utilizar um ambiente onde seja possível controlar a pressão, uma vez que o sensor de altura  é barométrico, e monitorar as tensões da bateria e dos terminais de acionamento de paraquedas. Além disso, deve ser possível acionar ignitores ligados ao rRocket, mas localizados externamente ao ambiente de pressão controlada. Tudo isso é possível utilizando-se um dispositivo para testes experimentais em bancada denominado [rRocket-Monitor](https://github.com/gbertoldo/rRocket-Monitor) e sua respectiva interface gráfica, o [rRocket-Monitor-UI](https://github.com/gbertoldo/rRocket-Monitor-UI). O rRocket deve satisfazer as [condições para verificação em experimentos de bancada](https://github.com/gbertoldo/rRocket-Monitor-UI?tab=readme-ov-file#procedimento-de-teste-do-rrocket) antes de qualquer lançamento!
 
+# Operações com o botão
+Há dois botões no rRocket: um sobre o Arduino e outro soldado na placa principal. O botão do Arduino serve para reiniciá-lo e não deve ser utilizado. O segundo botão tem as seguintes funções:
+- Clique curto (menos que 1 s): informa o apogeu do último voo de forma sonora e visual.
+- Clique longo (mais que 3 s): apaga a memória do último voo.
+
+ ⚠️ É necessário tomar os devidos cuidados para que nenhum dos botões seja pressionado acidentalmente durante o voo.
+
 # Comunicação visual e sonora
+
+## Estado do altímetro
+- Bipe contínuo: indica que um erro crítico no barômetro foi detectado durante a inicialização. Nestas condições, o altímetro não deve ser utilizado.
+- Bipe e piscar de LED intermitente com período de 1,5 s: a memória de voo está limpa e o altímetro está pronto para o lançamento.
+- Ausência de bipe e piscar de LED: a memória de voo está preenchida. O altímetro não deve ser lançado. Recupere os dados utilizando o [rRocket-UI](https://github.com/gbertoldo/rRocket-UI) e limpe a memória de voo para o próximo lançamento.
+
+## Apogeu
+A comunicação do apogeu, em metros, é feita a partir da unidade de milhar, se presente, seguida por uma pausa, a centena, seguida por uma pausa, e assim sucessivamente até a unidade. Bipe curto indica a adição de uma unidade. Bipe longo indica o algarismo zero. Seguem alguns exemplos:
+- 1203 m: Bipe PAUSA Bipe-Bipe PAUSA Biiiiiiipe PAUSA Bipe-Bipe-Bipe
+- 203 m: Bipe-Bipe PAUSA Biiiiiiipe PAUSA Bipe-Bipe-Bipe
+
