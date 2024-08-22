@@ -69,10 +69,10 @@ Procedimento de carregamento de _firmware_
    
 # Testes
 
-Há dois tipos de testes mandatórios antes de se utilizar o rRocket em voos reais: simulações e experimentos de bancada. 
+Há dois tipos de testes de verificação mandatórios antes de se utilizar o rRocket em voos reais: simulações e experimentos de bancada. 
 
 ## Simulações
-O primeiro tipo de testes envolve simulação de voos utilizando a interface gráfica [rRocket-UI](https://github.com/gbertoldo/rRocket-UI). Neste caso, os dados de altura do rRocket não são lidos pelo barômetro, mas informados pela interface gráfica. A simulação pode ser realizada com dados de voos reais obtidos por outros computadores de bordo ou obtidos através de simulações utilizando aplicativos como [Open Rocket](https://openrocket.info/index.html), por exemplo. Há um subdiretório da interface gráfica com dados de diversos voos reais ou fabricados. Exceto nos casos de voos instáveis, nos quais a trajetória difere completamente do modelo utilizado no algoritmo, o computador de bordo deve 
+O primeiro tipo de testes envolve simulação de voos utilizando a interface gráfica [rRocket-UI](https://github.com/gbertoldo/rRocket-UI). Neste caso, os dados de altura do rRocket não são lidos pelo barômetro, mas informados pela interface gráfica. A simulação pode ser realizada com dados de voos reais obtidos por outros computadores de bordo ou obtidos através de simulações utilizando aplicativos como [Open Rocket](https://openrocket.info/index.html), por exemplo. Há um subdiretório da interface gráfica (sim) com dados de diversos voos reais ou fabricados. Exceto nos casos de voos instáveis, nos quais a trajetória difere completamente do modelo utilizado no algoritmo, o computador de bordo deve 
 1. Reconhecer a decolagem
 2. Detectar corretamente o apogeu e acionar o paraquedas auxiliar
 3. Acionar o paraquedas principal na altura configurada
@@ -84,4 +84,6 @@ Observação: antes da liberação de uma nova versão do rRocket, o dispositivo
 
 ## Experimentos de bancada
 
-Os experimentos de bancada visam avaliar a integridade de _hardware_ e a sua integração com o _software_. Para isso, é necessário utilizar um ambiente onde seja possível controlar a pressão, uma vez que o sensor de altura  é barométrico, e monitorar as tensões da bateria e dos terminais de acionamento de paraquedas. Além disso, deve ser possível acionar ignitores ligados ao rRocket, mas localizados externamente ao ambiente de pressão controlada.
+Os experimentos de bancada visam avaliar a integridade de _hardware_ e a sua integração com o _software_. Para isso, é necessário utilizar um ambiente onde seja possível controlar a pressão, uma vez que o sensor de altura  é barométrico, e monitorar as tensões da bateria e dos terminais de acionamento de paraquedas. Além disso, deve ser possível acionar ignitores ligados ao rRocket, mas localizados externamente ao ambiente de pressão controlada. Tudo isso é possível utilizando-se um dispositivo para testes experimentais em bancada denominado [rRocket-Monitor](https://github.com/gbertoldo/rRocket-Monitor) e sua respectiva interface gráfica, o [rRocket-Monitor-UI](https://github.com/gbertoldo/rRocket-Monitor-UI). O rRocket deve satisfazer as [condições para verificação em experimentos de bancada](https://github.com/gbertoldo/rRocket-Monitor-UI?tab=readme-ov-file#procedimento-de-teste-do-rrocket) antes de qualquer lançamento!
+
+# Comunicação visual e sonora
