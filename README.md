@@ -3,13 +3,13 @@
 rRocket é um projeto _open-source_ de computador de bordo para minifoguetes baseado em Arduino visando a educação na área aeroespacial. 
 
 # Características principais
-- Utiliza Arduino Nano;
+- Baseado em Arduino;
 - Medição de altura acima do nível do solo por barômetro BMP280;
 - Capacidade de registro da componente vertical da trajetória na memória permanente (1024 bytes) do Arduino;
 - Registro de dados de voo com frequência de 10 Hz até o apogeu;
 - Registro de dados de voo com frequência definida pelo usuário após o apogeu ($\leq$ 10 Hz);
 - Capacidade de acionamento de dois paraquedas: o auxiliar (drogue) no apogeu e o principal em altura definida pelo usuário;
-- Controle através do algoritmo de Máquina de Estados Finitos;
+- Controle através do algoritmo de [Máquina de Estados Finitos](https://en.wikipedia.org/wiki/Finite-state_machine);
 - Aplicação do [filtro de Kalman](https://www.kalmanfilter.net/default.aspx) para detecção de apogeu e filtro alfa dinâmico para oscilações de velocidade;
 - [Comunicação de apogeu](#apogeu) através de sinal sonoro e luninoso;
 - [Relatório de erros](#códigos-de-erros);
@@ -20,10 +20,10 @@ rRocket é um projeto _open-source_ de computador de bordo para minifoguetes bas
 # Versão
 Versão 1.7.2
 # Aviso :warning:
-Como qualquer sistema eletrônico, o rRocket não é infalível. Deste modo, é fundamental que os usuários sigam rigorosamente as [regras de segurança para lançamentos de minifoguetes](https://abmf.bar.org.br/home). Além disso, é essencial garantir que, em caso de falha do sistema de recuperação, a queda do minifoguete não cause danos à vida ou ao patrimônio. Os autores se isentam de qualquer responsabilidade sobre a utilização do dispositivo.
+Como qualquer sistema eletrônico, o rRocket não é infalível. Deste modo, é fundamental que os usuários sigam rigorosamente as [regras de segurança para lançamentos de minifoguetes](https://abmf.bar.org.br/home). Além disso, é essencial garantir que, em caso de falha do sistema de recuperação, a queda do minifoguete não cause danos à vida ou ao patrimônio. Os autores se isentam de qualquer responsabilidade sobre a utilização do rRocket.
 
 # Hardware
-Desenvolvido com o propósito de redução de custos, o hardware do rRocket é formado por componentes eletrônicos facilmente disponíveis no mercado. Em função disso, o computador de bordo pode ser montado por qualquer pessoa com conhecimento básico de soldagem. A figura abaixo ilustra a PCI (placa de circuito impresso) do rRocket modelo EZ, ou, simplesmente, rRocket-EZ, e a figura seguinte ilustra um rRocket-EZ montado. 
+Desenvolvido com o propósito educacional e com vistas na redução de custos, o hardware do rRocket é formado por componentes eletrônicos facilmente disponíveis no mercado. Em função disso, o computador de bordo pode ser montado por qualquer pessoa com conhecimento básico de soldagem. A figura abaixo ilustra a PCI (placa de circuito impresso) do rRocket modelo EZ, ou, simplesmente, rRocket-EZ, e a figura seguinte ilustra um rRocket-EZ montado. 
 
 <center>
 <picture>
@@ -35,9 +35,13 @@ Desenvolvido com o propósito de redução de custos, o hardware do rRocket é f
 </picture>
 </center>
 
+O projeto elétrico do rRocket e de sua PCI está disponível gratuitamente no site [EasyEDA](https://easyeda.com/editor#project_id=c0ecbdbfe3784ba78bbb9bd81a9d2e2d). A partir deste site é possível comprar a placa (sem os componentes montados) ou baixar gratuitamente os arquivos Gerber e produzi-la de outra forma.
+
+⚠️ Os autores não tem qualquer relação comercial com a EasyEDA. Os usuários devem se sentir livres para escolher a forma que melhor lhes convir para a produção da PCI.
+
 Lista completa de componentes
 -----------------------------
-- Placa principal :todo:
+- [Placa principal](https://easyeda.com/editor#project_id=c0ecbdbfe3784ba78bbb9bd81a9d2e2d)
 - Arduino Nano
 - Módulo BMP280
 - R1: resistor 330 ohms (1/4 W)
@@ -53,7 +57,9 @@ Lista completa de componentes
 - C9: capacitor eletrolítico (polarizado) 1000 uF (25 V)
 - 4 conectores do tipo MKDS3/2-5.08
 
-⚠️ Recomenda-se testar cada componente separadamente antes de realizar a soldagem na placa principal.
+⚠️ Recomenda-se testar cada componente separadamente em _protoboard_ antes de realizar a soldagem na placa principal. Com base na experiência dos autores, alguns lotes de componentes apresentam os seguintes problemas:
+- Arduino: pino 3V3 não gera a tensão de 3,3 V esperada.
+- BMP280: componente defeituoso.
 
 # Firmware
 
@@ -70,16 +76,16 @@ Procedimento de carregamento de _firmware_
    
 # Testes
 
-Há dois tipos de testes de verificação mandatórios antes de se utilizar o rRocket em voos reais: simulações e experimentos de bancada. 
+Há dois tipos de testes de verificação **MANDATÓRIOS** antes de se utilizar o rRocket em voos reais: simulações e experimentos de bancada. 
 
 ## Simulações
 O primeiro tipo de testes envolve simulação de voos utilizando a interface gráfica [rRocket-UI](https://github.com/gbertoldo/rRocket-UI). Neste caso, os dados de altura do rRocket não são lidos pelo barômetro, mas informados pela interface gráfica. A simulação pode ser realizada com dados de voos reais obtidos por outros computadores de bordo ou obtidos através de simulações utilizando aplicativos como [Open Rocket](https://openrocket.info/index.html), por exemplo. Há um subdiretório da interface gráfica (sim) com dados de diversos voos reais ou fabricados. Exceto nos casos de voos instáveis, nos quais a trajetória difere completamente do modelo utilizado no algoritmo, o computador de bordo deve 
-1. Reconhecer a decolagem
-2. Detectar corretamente o apogeu e acionar o paraquedas auxiliar
-3. Acionar o paraquedas principal na altura configurada
-4. Detectar o pouso
+1. Reconhecer a decolagem;
+2. Detectar corretamente o apogeu e acionar o paraquedas auxiliar;
+3. Acionar o paraquedas principal na altura configurada;
+4. Detectar o pouso.
    
-Caso estas condições não sejam observadas, o dispositivo não deve ser utilizado. Por gentileza, [comunique-nos](https://github.com/gbertoldo/rRocket/issues) a falha.
+**Caso estas condições não sejam observadas, o dispositivo não deve ser utilizado.** Por gentileza, [comunique-nos](https://github.com/gbertoldo/rRocket/issues) a falha.
 
 Observação: antes da liberação de uma nova versão do rRocket, o dispositivo é submetido a testes simulados com todos os voos reais e fabricados disponíveis na interface gráfica. A versão é disponibilizada apenas se as condições acima forem satisfeitas.
 
@@ -97,9 +103,10 @@ Há dois botões no rRocket: um sobre o Arduino e outro soldado na placa princip
 # Comunicação visual e sonora
 
 ## Estado do altímetro
-- Bipe contínuo: indica que um erro crítico no barômetro foi detectado durante a inicialização. Nestas condições, o altímetro não deve ser utilizado.
+- Um bipe seguido por outro após aproximandamente 3 s: indica o início e fim do processo de inicialização do altímetro.
+- Bipe contínuo: indica que um erro crítico no barômetro foi detectado durante a inicialização. **Nestas condições, o altímetro não deve ser utilizado.**
 - Bipe e piscar de LED intermitente com período de 1,5 s: a memória de voo está limpa e o altímetro está pronto para o lançamento.
-- Ausência de bipe e piscar de LED: a memória de voo está preenchida. O altímetro não deve ser lançado. Recupere os dados utilizando o [rRocket-UI](https://github.com/gbertoldo/rRocket-UI) e limpe a memória de voo para o próximo lançamento.
+- Ausência de bipe e piscar de LED: a memória de voo está preenchida. O altímetro não deve ser lançado. Recupere os dados utilizando o [rRocket-UI](https://github.com/gbertoldo/rRocket-UI) e limpe a memória de voo antes do próximo lançamento.
 
 ## Apogeu
 A comunicação do apogeu, em metros, é feita através de bipes e piscadas de LED. Como os dois sinais são sincronizados, apenas a codificação do sinal sonoro será explicada. A apresentação de cada algarismo que compõe o número é realizada da maior para a menor ordem. Por exemplo, no número 1203, são apresentados, nesta sequência, os algarismos 1, 0, 2 e 3. As ordens são separadas por uma breve pausa. Os algarismos são identificados pela quantidade ou tipo do bipe. Um bipe curto indica o algarismo 1, dois bipes curtos indicam o algarismo 2, e assim sucessivamente. O algarismo zero é indicado por um bipe longo. Seguem alguns exemplos:
