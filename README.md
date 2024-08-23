@@ -23,7 +23,7 @@ Versão 1.7.2
 Como qualquer sistema eletrônico, o rRocket não é infalível. Deste modo, é fundamental que os usuários sigam rigorosamente as [regras de segurança para lançamentos de minifoguetes](https://abmf.bar.org.br/home). Além disso, é essencial garantir que, em caso de falha do sistema de recuperação, a queda do minifoguete não cause danos à vida ou ao patrimônio. Os autores se isentam de qualquer responsabilidade sobre a utilização do rRocket.
 
 # Hardware
-Desenvolvido com o propósito educacional e com vistas na redução de custos, o hardware do rRocket é formado por componentes eletrônicos facilmente disponíveis no mercado. Em função disso, o computador de bordo pode ser montado por qualquer pessoa com conhecimento básico de soldagem. A figura abaixo ilustra a PCI (placa de circuito impresso) do rRocket modelo EZ, ou, simplesmente, rRocket-EZ, e a figura seguinte ilustra um rRocket-EZ montado. 
+Desenvolvido com propósito educacional e redução de custos, o hardware do rRocket é formado por componentes eletrônicos facilmente disponíveis no mercado. Em função disso, o computador de bordo pode ser montado por qualquer pessoa com conhecimento básico de soldagem. A figura abaixo ilustra a PCI (placa de circuito impresso) do rRocket modelo EZ, ou, simplesmente, rRocket-EZ, e a figura seguinte ilustra um rRocket-EZ montado. 
 
 <center>
 <picture>
