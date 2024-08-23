@@ -10,7 +10,7 @@ rRocket é um projeto _open-source_ de computador de bordo para minifoguetes bas
 - Registro de dados de voo com frequência definida pelo usuário após o apogeu ($\leq$ 10 Hz);
 - Capacidade de acionamento de dois paraquedas: o auxiliar (drogue) no apogeu e o principal em altura definida pelo usuário;
 - Controle através do algoritmo de [Máquina de Estados Finitos](https://en.wikipedia.org/wiki/Finite-state_machine);
-- Aplicação do [filtro de Kalman](https://www.kalmanfilter.net/default.aspx) para detecção de apogeu e filtro alfa dinâmico para oscilações de velocidade;
+- Aplicação do [filtro de Kalman](https://www.kalmanfilter.net/default.aspx) para detecção de apogeu;
 - [Comunicação de apogeu](#apogeu) através de sinal sonoro e luninoso;
 - [Relatório de erros](#códigos-de-erros);
 - Capacidade de [simulação](#simulações) do comportamento do dispositivo com base em dados de voos reais ou simulados;
@@ -51,7 +51,7 @@ Lista completa de componentes
 - R5: resistor 470 ohms (1/4 W)
 - LED 5 mm
 - D1: Diodo 1N4007
-- Q1 e Q2: transistores TIP120 ou TIP122
+- Q1 e Q2: transistores TIP122
 - Key1: botão de pressionar 6 mm x 6 mm x 4 mm (push button)
 - SG1: buzzer ativo (5 V)
 - C9: capacitor eletrolítico (polarizado) 1000 uF (25 V)
