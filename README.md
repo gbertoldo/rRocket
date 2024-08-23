@@ -101,7 +101,8 @@ Há dois botões no rRocket: um sobre o Arduino e outro soldado na placa princip
 - Ausência de bipe e piscar de LED: a memória de voo está preenchida. O altímetro não deve ser lançado. Recupere os dados utilizando o [rRocket-UI](https://github.com/gbertoldo/rRocket-UI) e limpe a memória de voo para o próximo lançamento.
 
 ## Apogeu
-A comunicação do apogeu, em metros, é feita a partir da unidade de milhar, se presente, seguida por uma pausa, a centena, seguida por uma pausa, e assim sucessivamente até a unidade. Bipe curto indica a adição de uma unidade. Bipe longo indica o algarismo zero. Seguem alguns exemplos:
+A comunicação do apogeu, em metros, é feita através de bipes e piscadas de LED. Como os dois sinais são sincronizados, apenas a codificação do sinal sonoro será explicada. A apresentação de cada algarismo que compõe o número é realizada da maior para a menor ordem. Por exemplo, no número 1203, são apresentados, nesta sequência, os algarismos 1, 0, 2 e 3. As ordens são separadas por uma breve pausa. Os algarismos são identificados pela quantidade ou tipo do bipe. Um bipe curto indica o algarismo 1, dois bipes curtos indicam o algarismo 2, e assim sucessivamente. O algarismo zero é indicado por um bipe longo. Seguem alguns exemplos:
 - 1203 m: Bipe PAUSA Bipe-Bipe PAUSA Biiiiiiipe PAUSA Bipe-Bipe-Bipe
 - 203 m: Bipe-Bipe PAUSA Biiiiiiipe PAUSA Bipe-Bipe-Bipe
+- 80 m: Bipe-Bipe-Bipe-Bipe-Bipe-Bipe-Bipe-Bipe PAUSA Biiiiiiipe
 
