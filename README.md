@@ -3,16 +3,17 @@
 rRocket é um projeto _open-source_ de computador de bordo para minifoguetes baseado em Arduino visando a educação na área aeroespacial. 
 
 # Características principais
-- Medição de altura acima do nível do solo por barômetro;
+- Utiliza Arduino Nano;
+- Medição de altura acima do nível do solo por barômetro BMP280;
 - Capacidade de registro da componente vertical da trajetória na memória permanente (1024 bytes) do Arduino;
 - Registro de dados de voo com frequência de 10 Hz até o apogeu;
-- Registro de dados de voo com frequência definida pelo usuário após o apogeu;
+- Registro de dados de voo com frequência definida pelo usuário após o apogeu ($\leq$ 10 Hz);
 - Capacidade de acionamento de dois paraquedas: o auxiliar (drogue) no apogeu e o principal em altura definida pelo usuário;
 - Controle através do algoritmo de Máquina de Estados Finitos;
-- Aplicação do filtro de Kalman para detecção de apogeu e filtro alfa dinâmico para oscilações de velocidade;
-- Comunicação de apogeu através de sinal sonoro e luninoso;
-- Relatório de erros;
-- Capacidade de simulação do comportamento do dispositivo com base em dados de voos reais ou simulados;
+- Aplicação do [filtro de Kalman](https://www.kalmanfilter.net/default.aspx) para detecção de apogeu e filtro alfa dinâmico para oscilações de velocidade;
+- [Comunicação de apogeu](#apogeu) através de sinal sonoro e luninoso;
+- [Relatório de erros](#códigos-de-erros);
+- Capacidade de [simulação](#simulações) do comportamento do dispositivo com base em dados de voos reais ou simulados;
 - Configuração, leitura de dados e simulação de voo através de interface gráfica dedicada ([rRocket-UI](https://github.com/gbertoldo/rRocket-UI));
 - Alimentação por bateria 6LR61 (9V).
 
@@ -105,4 +106,12 @@ A comunicação do apogeu, em metros, é feita através de bipes e piscadas de L
 - 1203 m: Bipe PAUSA Bipe-Bipe PAUSA Biiiiiiipe PAUSA Bipe-Bipe-Bipe
 - 203 m: Bipe-Bipe PAUSA Biiiiiiipe PAUSA Bipe-Bipe-Bipe
 - 80 m: Bipe-Bipe-Bipe-Bipe-Bipe-Bipe-Bipe-Bipe PAUSA Biiiiiiipe
+
+# Códigos de erros
+Em caso de erros, os seguintes códigos podem ser reportados pelo rRocket:
+- Erro 1: Falha de inicialização do barômetro;
+- Erro 2: Falha de inicialização de atuadores;
+- Erro 3: Altura menor que o limite inferior registrável;
+- Erro 4: Altura maior que o limite superior registrável;
+- Erro 5: Voo iniciado com memória não apagada.
 
