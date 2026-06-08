@@ -76,7 +76,7 @@ bool Barometer::getBarometerAddress(byte& address)
   byte err;
   int  counter {0};
 
-  for (byte addr = 1; addr < 127; addr++ )
+  for (byte addr = 0x76; addr <= 0x78; addr++ )
   {
 
     Wire.beginTransmission(addr);

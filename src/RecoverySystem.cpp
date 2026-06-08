@@ -453,19 +453,19 @@ bool RecoverySystem::registerAltitude(const uint8_t& scaler)
 void RecoverySystem::changeStateToFlying()
 {
     // Storing data to memory using the corrected altitude
-    //float newBaseline = altitude[0];
+    float newBaseline = altitude[0];
 
     // Setting barometer new baseline
-    //barometer.setBaseline(newBaseline);
+    barometer.setBaseline(newBaseline);
     /* 
       Why resetting the barometer height baseline? If altimeter stays switched on for a long time, environment pressure
       and temperature may change and, hence, change local baseline height. To avoid this problem, it is necessary to 
       reset the barometer height baseline when liftoff is detected.
     */
-    //for (int i = 0; i <= N; i++) 
-    //{
-    //  altitude[i] = altitude[i]-newBaseline;
-    //}
+    for (int i = 0; i <= N; i++) 
+    {
+      altitude[i] = altitude[i]-newBaseline;
+    }
 
     /*
       Delayed altitude vector recording (see the note about altitude vector delayed record in the header)
